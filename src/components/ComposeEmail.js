@@ -227,7 +227,7 @@ const ComposeEmail = () => {
 
   return (
     <div className="page active">
-      <h2 className="page-title">Compose Professional Email XD</h2>
+      <h2 className="page-title">Compose Professional Email</h2>
       
       <div className="card">
         <form onSubmit={handleSubmit}>
