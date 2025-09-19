@@ -16,6 +16,30 @@ const ComposeEmail = () => {
   const [showHindi, setShowHindi] = useState({ subject: false, content: false })
   const [loading, setLoading] = useState(false)
   const [translating, setTranslating] = useState({ subject: false, content: false })
+  const [showDropdown, setShowDropdown] = useState({ from: false, to: false })
+
+  // Email options data
+  const emailOptions = {
+    Principal: ['Principal-1@kkwagh.edu.in'],
+    HOD: [
+      'HOD-1@kkwagh.edu.in',
+      'HOD-2@kkwagh.edu.in',
+      'HOD-3@kkwagh.edu.in',
+      'HOD-4@kkwagh.edu.in',
+      'HOD-5@kkwagh.edu.in',
+      'HOD-6@kkwagh.edu.in',
+      'HOD-7@kkwagh.edu.in'
+    ],
+    Dean: [
+      'Dean-1@kkwagh.edu.in',
+      'Dean-2@kkwagh.edu.in',
+      'Dean-3@kkwagh.edu.in',
+      'Dean-4@kkwagh.edu.in',
+      'Dean-5@kkwagh.edu.in',
+      'Dean-6@kkwagh.edu.in',
+      'Dean-7@kkwagh.edu.in'
+    ]
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -24,6 +48,15 @@ const ComposeEmail = () => {
 
   const handleFileUpload = (e) => {
     setFormData(prev => ({ ...prev, pdfFile: e.target.files[0] }))
+  }
+
+  const toggleDropdown = (field) => {
+    setShowDropdown(prev => ({ ...prev, [field]: !prev[field] }))
+  }
+
+  const selectEmail = (field, email) => {
+    setFormData(prev => ({ ...prev, [field]: email }))
+    setShowDropdown(prev => ({ ...prev, [field]: false }))
   }
 
   const translateText = async (text, type) => {
@@ -234,29 +267,85 @@ const ComposeEmail = () => {
           {/* From Field */}
           <div className="form-group">
             <label className="form-label">From</label>
-            <input
-              type="email"
-              className="form-input"
-              name="from"
-              value={formData.from}
-              onChange={handleInputChange}
-              placeholder="Enter sender's email address"
-              required
-            />
+            <div className="input-with-dropdown">
+              <input
+                type="email"
+                className="form-input"
+                name="from"
+                value={formData.from}
+                onChange={handleInputChange}
+                placeholder="Enter sender's email address"
+                required
+              />
+              <button 
+                type="button" 
+                className="dropdown-btn"
+                onClick={() => toggleDropdown('from')}
+              >
+                <i className="fas fa-chevron-down"></i>
+              </button>
+              {showDropdown.from && (
+                <div className="dropdown-menu">
+                  <div className="dropdown-title">Select Sender</div>
+                  {Object.entries(emailOptions).map(([title, emails]) => (
+                    <div key={title} className="dropdown-group">
+                      <div className="dropdown-group-title">{title}</div>
+                      {emails.map(email => (
+                        <div 
+                          key={email} 
+                          className="dropdown-item"
+                          onClick={() => selectEmail('from', email)}
+                        >
+                          {email}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* To Field */}
           <div className="form-group">
             <label className="form-label">To</label>
-            <input
-              type="email"
-              className="form-input"
-              name="to"
-              value={formData.to}
-              onChange={handleInputChange}
-              placeholder="Enter recipient's email address"
-              required
-            />
+            <div className="input-with-dropdown">
+              <input
+                type="email"
+                className="form-input"
+                name="to"
+                value={formData.to}
+                onChange={handleInputChange}
+                placeholder="Enter recipient's email address"
+                required
+              />
+              <button 
+                type="button" 
+                className="dropdown-btn"
+                onClick={() => toggleDropdown('to')}
+              >
+                <i className="fas fa-chevron-down"></i>
+              </button>
+              {showDropdown.to && (
+                <div className="dropdown-menu">
+                  <div className="dropdown-title">Select Recipient</div>
+                  {Object.entries(emailOptions).map(([title, emails]) => (
+                    <div key={title} className="dropdown-group">
+                      <div className="dropdown-group-title">{title}</div>
+                      {emails.map(email => (
+                        <div 
+                          key={email} 
+                          className="dropdown-item"
+                          onClick={() => selectEmail('to', email)}
+                        >
+                          {email}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-row">
