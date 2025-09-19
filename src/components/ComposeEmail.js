@@ -137,12 +137,7 @@ const ComposeEmail = () => {
       'year': 'वर्ष',
       'today': 'आज',
       'tomorrow': 'कल',
-      'yesterday': 'कल',
-      // Added more context-aware translations
-      'test': 'परीक्षण', // More general translation for "test"
-      'this is': 'यह है',
-      'a': 'एक',
-      'the': '',
+      'yesterday': 'कल'
     };
 
     let translated = text;
@@ -153,9 +148,6 @@ const ComposeEmail = () => {
       translated = translated.replace(regex, hindi);
     });
 
-    // Clean up extra spaces that might result from empty translations
-    translated = translated.replace(/\s+/g, ' ').trim();
-    
     return translated !== text ? translated : 'हिंदी अनुवाद: ' + text;
   }
 
@@ -304,23 +296,8 @@ const ComposeEmail = () => {
               </button>
             </div>
             {showHindi.subject && (
-              <div className="hindi-translation-container">
-                <div className="hindi-text">
-                  <strong>Hindi Translation:</strong> 
-                  <span>{subjectHindi}</span>
-                </div>
-                <button 
-                  type="button" 
-                  className="edit-translation-btn"
-                  onClick={() => {
-                    const newTranslation = prompt("Edit Hindi translation:", subjectHindi);
-                    if (newTranslation !== null) {
-                      setSubjectHindi(newTranslation);
-                    }
-                  }}
-                >
-                  <i className="fas fa-edit"></i> Edit
-                </button>
+              <div className="hindi-text">
+                <strong>Hindi Translation:</strong> {subjectHindi}
               </div>
             )}
           </div>
@@ -347,23 +324,8 @@ const ComposeEmail = () => {
               </button>
             </div>
             {showHindi.content && (
-              <div className="hindi-translation-container">
-                <div className="hindi-text">
-                  <strong>Hindi Translation:</strong> 
-                  <span>{contentHindi}</span>
-                </div>
-                <button 
-                  type="button" 
-                  className="edit-translation-btn"
-                  onClick={() => {
-                    const newTranslation = prompt("Edit Hindi translation:", contentHindi);
-                    if (newTranslation !== null) {
-                      setContentHindi(newTranslation);
-                    }
-                  }}
-                >
-                  <i className="fas fa-edit"></i> Edit
-                </button>
+              <div className="hindi-text">
+                <strong>Hindi Translation:</strong> {contentHindi}
               </div>
             )}
           </div>
@@ -396,47 +358,6 @@ const ComposeEmail = () => {
           </button>
         </form>
       </div>
-
-      <style jsx>{`
-        .hindi-translation-container {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          margin-top: 8px;
-          padding: 10px;
-          background-color: #f8f9fa;
-          border-radius: 4px;
-        }
-        
-        .hindi-text {
-          flex: 1;
-        }
-        
-        .edit-translation-btn {
-          background: #6c757d;
-          color: white;
-          border: none;
-          padding: 5px 10px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 0.8rem;
-        }
-        
-        .edit-translation-btn:hover {
-          background: #5a6268;
-        }
-        
-        @media (max-width: 768px) {
-          .hindi-translation-container {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          
-          .edit-translation-btn {
-            align-self: flex-end;
-          }
-        }
-      `}</style>
     </div>
   )
 }
