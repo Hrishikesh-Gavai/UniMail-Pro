@@ -1075,7 +1075,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
-/* Dropdown Styles */
+/* DROPDOWN STYLES */
 .input-with-dropdown {
   position: relative;
   display: flex;
@@ -1101,6 +1101,20 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: rgba(0, 212, 255, 0.1);
   color: var(--primary);
   border-color: var(--primary);
+}
+
+/* Light theme adjustments for dropdown button */
+[data-theme="light"] .dropdown-btn {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(0, 0, 0, 0.1) !important;
+  border-left: none !important;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .dropdown-btn:hover {
+  background: rgba(0, 212, 255, 0.1) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary);
 }
 
 .dropdown-menu {
@@ -1185,7 +1199,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Light theme adjustments for dropdown */
 [data-theme="light"] .dropdown-menu {
-  background: white;
+  background: var(--dark-surface);
   border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -1219,4 +1233,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .input-with-dropdown .form-input:focus + .dropdown-btn {
   border-color: var(--primary);
   background: rgba(0, 212, 255, 0.1);
+}
+
+/* Light theme adjustments for input with dropdown */
+[data-theme="light"] .input-with-dropdown .form-input:focus + .dropdown-btn {
+  border-color: var(--primary) !important;
+  background: rgba(0, 212, 255, 0.1) !important;
 }
