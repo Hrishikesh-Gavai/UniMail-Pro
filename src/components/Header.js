@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Header = ({ currentPage, setCurrentPage }) => {
+const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
   return (
     <header className="header">
       <div className="header-content">
@@ -8,18 +8,31 @@ const Header = ({ currentPage, setCurrentPage }) => {
           <i className="fas fa-paper-plane"></i>
           UniMail Pro
         </div>
-        <div className="nav-tabs">
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="nav-tabs">
+            <button 
+              className={`nav-tab ${currentPage === 'compose' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('compose')}
+            >
+              <i className="fas fa-edit"></i> Compose Email
+            </button>
+            <button 
+              className={`nav-tab ${currentPage === 'records' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('records')}
+            >
+              <i className="fas fa-database"></i> Email Records
+            </button>
+          </div>
+          
+          {/* Theme Toggle Button */}
           <button 
-            className={`nav-tab ${currentPage === 'compose' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('compose')}
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           >
-            <i className="fas fa-edit"></i> Compose Email
-          </button>
-          <button 
-            className={`nav-tab ${currentPage === 'records' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('records')}
-          >
-            <i className="fas fa-database"></i> Email Records
+            {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </div>
       </div>
