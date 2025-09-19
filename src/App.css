@@ -1271,11 +1271,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: rgba(0, 212, 255, 0.1) !important;
 }
 
+/* ... your existing App.css content ... */
+
+/* ==================== */
+/* MOBILE RESPONSIVENESS */
+/* ==================== */
+
 /* Mobile Responsiveness Fixes */
 @media (max-width: 768px) {
   /* Improve header for mobile */
   .header {
     padding: 1rem;
+    position: relative; /* Ensure proper positioning context for dropdowns */
+    z-index: 1000; /* Ensure header stays above other content */
   }
   
   .header-content {
@@ -1406,12 +1414,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     max-width: none;
   }
   
-  /* Dropdown adjustments */
+  /* Dropdown adjustments - FIXED */
   .dropdown-menu {
-    position: fixed;
+    position: absolute;
     left: 1rem;
     right: 1rem;
     width: auto;
+    z-index: 1001; /* Higher z-index to ensure it appears above other content */
+    max-height: 300px; /* Limit height and allow scrolling */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+  
+  /* Ensure dropdown toggles are properly styled for mobile */
+  .dropdown-toggle {
+    padding: 1rem;
+    font-size: 1rem;
   }
 }
 
@@ -1434,11 +1452,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     padding: 0.5rem 0.75rem;
     margin: 0.125rem;
   }
+  
+  /* Additional dropdown fixes for very small screens */
+  .dropdown-menu {
+    left: 0.5rem;
+    right: 0.5rem;
+  }
 }
 
 /* Fix for iOS Safari specific issues */
 @supports (-webkit-touch-callout: none) {
   .card, .form-input, .form-select, .form-textarea {
     -webkit-appearance: none;
+  }
+  
+  /* Additional iOS dropdown fixes */
+  .dropdown-menu {
+    position: absolute;
   }
 }
