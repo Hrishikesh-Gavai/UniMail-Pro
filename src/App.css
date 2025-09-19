@@ -1185,7 +1185,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Light theme adjustments for dropdown */
 [data-theme="light"] .dropdown-menu {
-  background: var(--dark-surface);
+  background: white;
   border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
