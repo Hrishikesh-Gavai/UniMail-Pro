@@ -396,7 +396,7 @@ body {
 
 /* Font Awesome calendar icon styling */
 .fa-calendar {
-  background: var(--gradient-primary);
+  background: var(--gradient-primary) !important;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -405,7 +405,7 @@ body {
 
 /* For light theme - ensure icon is visible */
 [data-theme="light"] .fa-calendar {
-  background: var(--gradient-primary);
+  background: var(--gradient-primary) !important;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
