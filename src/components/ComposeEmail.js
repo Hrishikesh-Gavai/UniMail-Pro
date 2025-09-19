@@ -138,6 +138,7 @@ const ComposeEmail = () => {
       'today': 'आज',
       'tomorrow': 'कल',
       'yesterday': 'कल'
+      'this is a test': 'यह टेस्ट है'
     };
 
     let translated = text;
