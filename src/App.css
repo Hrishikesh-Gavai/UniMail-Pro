@@ -353,8 +353,8 @@ body {
 .form-textarea {
   width: 100%;
   padding: 1.25rem 1.5rem;
-  background: rgba(40, 40, 50, 0.8);
-  border: 3px solid black;
+  background: rgba(30, 30, 50, 0.8);
+  border: 3px solid rgba(0, 212, 255, 0.2);
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 1rem;
