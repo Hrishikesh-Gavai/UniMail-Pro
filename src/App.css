@@ -394,21 +394,14 @@ body {
   min-height: 150px;
 }
 
-/* Font Awesome calendar icon styling */
+/* Calendar icon styling */
 .fa-calendar {
-  background: var(--gradient-primary) !important;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(var(--glow-primary));
+  color: var(--text-primary) !important;
 }
 
-/* For light theme - ensure icon is visible */
+/* For light theme */
 [data-theme="light"] .fa-calendar {
-  background: var(--gradient-primary) !important;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary) !important;
 }
 
 /* Translation Section */
