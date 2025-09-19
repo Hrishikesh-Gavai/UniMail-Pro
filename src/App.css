@@ -395,14 +395,26 @@ body {
   min-height: 150px;
 }
 
-/* Calendar icon styling */
-.fa-calendar {
-  color: var(--text-primary) !important;
+/* Calendar picker indicator styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* Makes the icon white in dark theme */
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* For light theme */
-[data-theme="light"] .fa-calendar {
-  color: var(--text-primary) !important;
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0); /* Makes the icon black in light theme */
+}
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* Translation Section */
