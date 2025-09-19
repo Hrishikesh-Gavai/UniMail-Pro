@@ -930,3 +930,119 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
 }
+
+/* Theme Toggle Button */
+.theme-toggle {
+  background: var(--gradient-primary);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1) rotate(30deg);
+  filter: drop-shadow(var(--glow-primary));
+}
+
+/* Light Theme Variables */
+[data-theme="light"] {
+  --dark-bg: #f5f7ff;
+  --dark-surface: #ffffff;
+  --dark-card: #f8f9ff;
+  --dark-hover: #eef1ff;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #6b6b80;
+  --gradient-surface: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  --gradient-hover: linear-gradient(135deg, #eef1ff 0%, #e0e5ff 100%);
+}
+
+/* Light Theme Specific Styles */
+[data-theme="light"] .header {
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .card {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .form-input,
+[data-theme="light"] .form-select,
+[data-theme="light"] .form-textarea {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .form-select {
+  color: var(--text-primary) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="light"] .form-select option {
+  color: var(--text-primary) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="light"] .file-upload {
+  border: 3px dashed rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="light"] .file-upload:hover {
+  border-color: var(--primary);
+  background: rgba(0, 212, 255, 0.1);
+}
+
+[data-theme="light"] .table-container {
+  background: var(--dark-surface);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .records-table th,
+[data-theme="light"] .records-table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .records-table th {
+  background: rgba(0, 212, 255, 0.1);
+}
+
+[data-theme="light"] .modal-content {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .background {
+  background: radial-gradient(circle at 25% 25%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 75% 75%, rgba(123, 44, 191, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, rgba(6, 255, 165, 0.05) 0%, transparent 50%);
+}
+
+[data-theme="light"] .nav-tabs {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .nav-tab {
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .nav-tab.active,
+[data-theme="light"] .nav-tab:hover {
+  color: var(--text-primary);
+}
+
+/* Scrollbar for light theme */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
