@@ -17,6 +17,7 @@ const ComposeEmail = () => {
   const [loading, setLoading] = useState(false)
   const [translating, setTranslating] = useState({ subject: false, content: false })
   const [showDropdown, setShowDropdown] = useState({ from: false, to: false })
+  const [activeCategory, setActiveCategory] = useState({ from: null, to: null })
 
   // Email options data
   const emailOptions = {
@@ -51,12 +52,30 @@ const ComposeEmail = () => {
   }
 
   const toggleDropdown = (field) => {
-    setShowDropdown(prev => ({ ...prev, [field]: !prev[field] }))
+    setShowDropdown(prev => ({ 
+      ...prev, 
+      [field]: !prev[field] 
+    }));
+    setActiveCategory(prev => ({
+      ...prev,
+      [field]: null // Reset category when opening dropdown
+    }));
   }
 
   const selectEmail = (field, email) => {
     setFormData(prev => ({ ...prev, [field]: email }))
     setShowDropdown(prev => ({ ...prev, [field]: false }))
+    setActiveCategory(prev => ({
+      ...prev,
+      [field]: null
+    }));
+  }
+
+  const selectCategory = (field, category) => {
+    setActiveCategory(prev => ({
+      ...prev,
+      [field]: category
+    }));
   }
 
   const translateText = async (text, type) => {
@@ -286,21 +305,42 @@ const ComposeEmail = () => {
               </button>
               {showDropdown.from && (
                 <div className="dropdown-menu">
-                  <div className="dropdown-title">Select Sender</div>
-                  {Object.entries(emailOptions).map(([title, emails]) => (
-                    <div key={title} className="dropdown-group">
-                      <div className="dropdown-group-title">{title}</div>
-                      {emails.map(email => (
-                        <div 
-                          key={email} 
-                          className="dropdown-item"
-                          onClick={() => selectEmail('from', email)}
-                        >
-                          {email}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+                  <div className="dropdown-title">
+                    {activeCategory.from ? `Select ${activeCategory.from} Email` : 'Select Category'}
+                    {activeCategory.from && (
+                      <button 
+                        className="dropdown-back"
+                        onClick={() => selectCategory('from', null)}
+                      >
+                        <i className="fas fa-arrow-left"></i> Back
+                      </button>
+                    )}
+                  </div>
+                  
+                  {!activeCategory.from ? (
+                    // Show categories
+                    Object.keys(emailOptions).map(category => (
+                      <div 
+                        key={category} 
+                        className="dropdown-item category-item"
+                        onClick={() => selectCategory('from', category)}
+                      >
+                        <i className="fas fa-folder"></i> {category}
+                        <span className="dropdown-arrow">▶</span>
+                      </div>
+                    ))
+                  ) : (
+                    // Show emails for selected category
+                    emailOptions[activeCategory.from].map(email => (
+                      <div 
+                        key={email} 
+                        className="dropdown-item email-item"
+                        onClick={() => selectEmail('from', email)}
+                      >
+                        <i className="fas fa-envelope"></i> {email}
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -328,21 +368,42 @@ const ComposeEmail = () => {
               </button>
               {showDropdown.to && (
                 <div className="dropdown-menu">
-                  <div className="dropdown-title">Select Recipient</div>
-                  {Object.entries(emailOptions).map(([title, emails]) => (
-                    <div key={title} className="dropdown-group">
-                      <div className="dropdown-group-title">{title}</div>
-                      {emails.map(email => (
-                        <div 
-                          key={email} 
-                          className="dropdown-item"
-                          onClick={() => selectEmail('to', email)}
-                        >
-                          {email}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
+                  <div className="dropdown-title">
+                    {activeCategory.to ? `Select ${activeCategory.to} Email` : 'Select Category'}
+                    {activeCategory.to && (
+                      <button 
+                        className="dropdown-back"
+                        onClick={() => selectCategory('to', null)}
+                      >
+                        <i className="fas fa-arrow-left"></i> Back
+                      </button>
+                    )}
+                  </div>
+                  
+                  {!activeCategory.to ? (
+                    // Show categories
+                    Object.keys(emailOptions).map(category => (
+                      <div 
+                        key={category} 
+                        className="dropdown-item category-item"
+                        onClick={() => selectCategory('to', category)}
+                      >
+                        <i className="fas fa-folder"></i> {category}
+                        <span className="dropdown-arrow">▶</span>
+                      </div>
+                    ))
+                  ) : (
+                    // Show emails for selected category
+                    emailOptions[activeCategory.to].map(email => (
+                      <div 
+                        key={email} 
+                        className="dropdown-item email-item"
+                        onClick={() => selectEmail('to', email)}
+                      >
+                        <i className="fas fa-envelope"></i> {email}
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>
