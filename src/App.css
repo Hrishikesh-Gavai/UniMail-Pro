@@ -348,13 +348,14 @@ body {
   letter-spacing: 1px;
 }
 
+/* Form Elements */
 .form-input,
 .form-select,
 .form-textarea {
   width: 100%;
   padding: 1.25rem 1.5rem;
-  background: rgba(30, 30, 50, 0.8);
-  border: 3px solid rgba(0, 212, 255, 0.2);
+  background: rgba(30, 30, 50, 0.8) !important;
+  border: 2px solid rgba(0, 212, 255, 0.2) !important;
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 1rem;
@@ -365,18 +366,18 @@ body {
 /* Fix for dropdown menu colors */
 .form-select {
   color: var(--text-primary) !important;
-  background-color: black !important;
+  background-color: rgba(30, 30, 50, 0.8) !important; /* Changed from black */
 }
 
 .form-select option {
   color: var(--text-primary) !important;
-  background-color: black !important;
+  background-color: rgba(30, 30, 50, 0.9) !important; /* Changed from black */
 }
 
 /* Ensure the dropdown maintains its appearance when focused */
 .form-select:focus {
   color: var(--text-primary) !important;
-  background-color: black !important;
+  background-color: rgba(30, 30, 50, 0.8) !important; /* Changed from black */
 }
 
 .form-input:focus,
@@ -990,8 +991,8 @@ body {
 [data-theme="light"] .form-input,
 [data-theme="light"] .form-select,
 [data-theme="light"] .form-textarea {
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid rgba(0, 0, 0, 0.1) !important;
   color: var(--text-primary);
 }
 
@@ -1001,6 +1002,11 @@ body {
 }
 
 [data-theme="light"] .form-select option {
+  color: var(--text-primary) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+[data-theme="light"] .form-select:focus {
   color: var(--text-primary) !important;
   background-color: rgba(255, 255, 255, 0.9) !important;
 }
