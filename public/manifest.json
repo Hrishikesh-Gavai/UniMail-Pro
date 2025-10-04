@@ -1,10 +1,16 @@
 {
+<<<<<<< HEAD
   "short_name": "UniMail Pro",
   "name": "UniMail Pro - University Email Management System",
+=======
+  "short_name": "React App",
+  "name": "Create React App Sample",
+>>>>>>> f4af213 (Mail automation and integration done successfully)
   "icons": [
     {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
+<<<<<<< HEAD
       "type": "image/x-icon",
       "purpose": "any"
     },
@@ -19,11 +25,30 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+=======
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+>>>>>>> f4af213 (Mail automation and integration done successfully)
     }
   ],
   "start_url": ".",
   "display": "standalone",
+<<<<<<< HEAD
   "theme_color": "#00d4ff",
   "background_color": "#0a0a0f",
   "description": "Professional email management system for universities"
 }
+=======
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
+>>>>>>> f4af213 (Mail automation and integration done successfully)

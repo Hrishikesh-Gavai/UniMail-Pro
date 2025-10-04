@@ -49,4 +49,8 @@ function App() {
   );
 }
 
+<<<<<<< HEAD
 export default App;
+=======
+export default App;
+>>>>>>> f4af213 (Mail automation and integration done successfully)

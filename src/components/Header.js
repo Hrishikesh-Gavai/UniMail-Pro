@@ -40,4 +40,8 @@ const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
   )
 }
 
+<<<<<<< HEAD
 export default Header
+=======
+export default Header
+>>>>>>> f4af213 (Mail automation and integration done successfully)
