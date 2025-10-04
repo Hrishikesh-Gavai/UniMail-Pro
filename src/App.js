@@ -37,20 +37,11 @@ function App() {
       />
       
       <div className="container">
-        {currentPage === 'compose' && (
-          <ComposeEmail />
-        )}
-        
-        {currentPage === 'records' && (
-          <EmailRecords />
-        )}
+        {currentPage === 'compose' && <ComposeEmail />}
+        {currentPage === 'records' && <EmailRecords />}
       </div>
     </div>
   );
 }
 
-<<<<<<< HEAD
 export default App;
-=======
-export default App;
->>>>>>> f4af213 (Mail automation and integration done successfully)

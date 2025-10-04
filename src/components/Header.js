@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
   return (
@@ -37,11 +37,7 @@ const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-<<<<<<< HEAD
-export default Header
-=======
-export default Header
->>>>>>> f4af213 (Mail automation and integration done successfully)
+export default Header;
