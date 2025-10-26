@@ -15,9 +15,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     subjectMarathi: "",
     contentMarathi: "",
     sentDate: new Date().toISOString().split("T")[0],
-    scheduleDate: "",
-    scheduleTime: "",
-    isScheduled: false,
   });
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -366,9 +363,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
             content_marathi: formData.contentMarathi,
             pdf_filename: formData.pdfFileNames.length ? formData.pdfFileNames.join(",") : null,
             sent_date: formData.sentDate,
-            is_scheduled: formData.isScheduled,
-            schedule_date: formData.isScheduled ? formData.scheduleDate : null,
-            schedule_time: formData.isScheduled ? formData.scheduleTime : null,
           },
         ])
         .select();
@@ -389,9 +383,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
         subjectMarathi: "",
         contentMarathi: "",
         sentDate: new Date().toISOString().split("T")[0],
-        scheduleDate: "",
-        scheduleTime: "",
-        isScheduled: false,
       });
       
       setShowTranslation({ 
@@ -408,32 +399,16 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  // --- Open Gmail with PDF attachments ---
-  const openGmailWithAttachments = async () => {
+  // --- Open Gmail & Save ---
+  const openGmailAndSave = async () => {
     if (!formData.to.length) {
       showNotification("Please add at least one recipient", "error");
       return;
     }
 
-    // Create a hidden form to open Gmail with attachments
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'https://mail.google.com/mail/u/0/?view=cm&fs=1&tf=1';
-    form.target = '_blank';
-    
-    // Add email parameters
-    const toField = document.createElement('input');
-    toField.type = 'hidden';
-    toField.name = 'to';
-    toField.value = formData.to.join(',');
-    form.appendChild(toField);
-
-    const subjectField = document.createElement('input');
-    subjectField.type = 'hidden';
-    subjectField.name = 'su';
-    subjectField.value = formData.subject || '';
-    form.appendChild(subjectField);
-
+    // Construct Gmail URL with all recipients and content including translations
+    const toEmails = formData.to.join(',');
+    const subject = formData.subject || '';
     let body = formData.content || '';
     
     // Add translations to the email body
@@ -448,111 +423,23 @@ const ComposeEmail = ({ onRecordSaved }) => {
         body += `\nMarathi:\n${formData.contentMarathi}\n`;
       }
     }
-
-    const bodyField = document.createElement('input');
-    bodyField.type = 'hidden';
-    bodyField.name = 'body';
-    bodyField.value = body;
-    form.appendChild(bodyField);
-
-    // Add file attachments if any
-    if (formData.pdfFiles.length > 0) {
-      // Note: Gmail doesn't support direct file attachment via URL parameters
-      // This will open Gmail with the compose window, user will need to attach files manually
-      showNotification("Gmail opened. Please attach the PDF files manually.", "info");
-    }
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-
-    // Save the record
-    await saveEmailRecord();
-  };
-
-  // --- Schedule Email ---
-  const scheduleEmail = async () => {
-    if (!formData.to.length) {
-      showNotification("Please add at least one recipient", "error");
-      return;
-    }
-
-    if (!formData.scheduleDate || !formData.scheduleTime) {
-      showNotification("Please select both date and time for scheduling", "error");
-      return;
-    }
-
-    const scheduledDateTime = new Date(`${formData.scheduleDate}T${formData.scheduleTime}`);
-    const now = new Date();
     
-    if (scheduledDateTime <= now) {
-      showNotification("Please select a future date and time for scheduling", "error");
-      return;
-    }
+    // Gmail URL structure
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("email_records")
-        .insert([
-          {
-            from_user: formData.from || "Not specified",
-            to_user: formData.to.join(","),
-            subject: formData.subject,
-            content: formData.content,
-            subject_hindi: formData.subjectHindi,
-            content_hindi: formData.contentHindi,
-            subject_marathi: formData.subjectMarathi,
-            content_marathi: formData.contentMarathi,
-            pdf_filename: formData.pdfFileNames.length ? formData.pdfFileNames.join(",") : null,
-            sent_date: formData.sentDate,
-            is_scheduled: true,
-            schedule_date: formData.scheduleDate,
-            schedule_time: formData.scheduleTime,
-            status: 'scheduled'
-          },
-        ])
-        .select();
+    // Open Gmail in new tab
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    if (gmailWindow) {
+      showNotification("Opening Gmail with your email content and translations...", "success");
       
-      if (error) throw error;
-      
-      showNotification(`Email scheduled for ${formData.scheduleDate} at ${formData.scheduleTime}`, "success");
-      
-      // Reset form but keep From email
-      setFormData({
-        from: formData.from,
-        to: [],
-        subject: "",
-        content: "",
-        pdfFiles: [],
-        pdfFileNames: [],
-        subjectHindi: "",
-        contentHindi: "",
-        subjectMarathi: "",
-        contentMarathi: "",
-        sentDate: new Date().toISOString().split("T")[0],
-        scheduleDate: "",
-        scheduleTime: "",
-        isScheduled: false,
-      });
-      
-      setShowTranslation({ 
-        hindi: { subject: false, content: false }, 
-        marathi: { subject: false, content: false } 
-      });
-      
-      if (onRecordSaved) onRecordSaved(data[0]);
-    } catch (err) {
-      console.error("Error scheduling email:", err);
-      showNotification("Failed to schedule email", "error");
-    } finally {
-      setLoading(false);
+      // Save the record after a short delay
+      setTimeout(async () => {
+        await saveEmailRecord();
+      }, 1000);
+    } else {
+      showNotification("Please allow popups for Gmail to open", "error");
     }
-  };
-
-  // --- Toggle Schedule ---
-  const toggleSchedule = () => {
-    setFormData(prev => ({ ...prev, isScheduled: !prev.isScheduled }));
   };
 
   return (
@@ -590,6 +477,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 placeholder="Type email and press Enter, or select from dropdown..." 
                 onKeyDown={handleManualEmailInput}
                 onBlur={(e) => {
+                  // Add email when input loses focus if there's content
                   if (e.target.value.trim() && isValidEmail(e.target.value.trim())) {
                     addEmail(e.target.value.trim());
                     e.target.value = "";
@@ -707,49 +595,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
             </div>
           </div>
         </div>
-
-        {/* Schedule Section */}
-        <div className="form-group">
-          <div className="schedule-toggle">
-            <label className="checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={formData.isScheduled}
-                onChange={toggleSchedule}
-              />
-              <span className="checkmark"></span>
-              Schedule this email
-            </label>
-          </div>
-
-          {formData.isScheduled && (
-            <div className="schedule-fields">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Schedule Date</label>
-                  <input 
-                    type="date" 
-                    name="scheduleDate" 
-                    value={formData.scheduleDate} 
-                    onChange={handleInputChange} 
-                    className="form-input"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Schedule Time</label>
-                  <input 
-                    type="time" 
-                    name="scheduleTime" 
-                    value={formData.scheduleTime} 
-                    onChange={handleInputChange} 
-                    className="form-input"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
         
         <div className="form-group">
           <label>Sent Date</label>
@@ -783,11 +628,11 @@ const ComposeEmail = ({ onRecordSaved }) => {
               Choose PDF Files
             </button>
             <div className="file-upload-hint">
-              Maximum 40MB per file. Files will be available for manual attachment in Gmail.
+              Maximum 40MB per file. You'll need to attach these manually in Gmail.
             </div>
             {formData.pdfFiles.length > 0 && (
               <div className="file-list">
-                <p><strong>Files ready for attachment:</strong></p>
+                <p><strong>Files to attach in Gmail:</strong></p>
                 <ul>
                   {formData.pdfFiles.map((f, i) => (
                     <li key={i}>
@@ -803,27 +648,15 @@ const ComposeEmail = ({ onRecordSaved }) => {
 
         {/* Buttons */}
         <div className="actions">
-          {formData.isScheduled ? (
-            <button 
-              type="button"
-              onClick={scheduleEmail} 
-              disabled={loading}
-              className="schedule-btn"
-            >
-              <i className="fas fa-clock"></i>
-              {loading ? "Scheduling..." : "Schedule Email"}
-            </button>
-          ) : (
-            <button 
-              type="button"
-              onClick={openGmailWithAttachments} 
-              disabled={loading}
-              className="primary-btn"
-            >
-              <i className="fab fa-google"></i>
-              {loading ? "Opening..." : "Open in Gmail & Save"}
-            </button>
-          )}
+          <button 
+            type="button"
+            onClick={openGmailAndSave} 
+            disabled={loading}
+            className="primary-btn"
+          >
+            <i className="fab fa-google"></i>
+            Open in Gmail & Save
+          </button>
           <button 
             type="button"
             onClick={saveEmailRecord} 
