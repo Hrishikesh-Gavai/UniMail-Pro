@@ -1,11 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { showNotification, showPromiseNotification } from "../utils/notifications";
-import { InlineLoading } from "./LoadingScreen"; // Add this import
-import { 
-  Mail, Send, Save, Upload, FileText, ChevronDown, Folder, 
-  ArrowLeft, X, Languages, User, Calendar, Info, Trash2 
-} from 'lucide-react';
+import { InlineLoading } from "./LoadingScreen";
+import { Mail, Send, Save, Upload, FileText, ChevronDown, Folder, ArrowLeft, X, Languages, User, Calendar, Info, Trash2, Paperclip } from 'lucide-react';
 
 const ComposeEmail = ({ onRecordSaved }) => {
   const [formData, setFormData] = useState({
@@ -24,9 +21,9 @@ const ComposeEmail = ({ onRecordSaved }) => {
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeFolder, setActiveFolder] = useState(null);
-  const [translating, setTranslating] = useState({ 
-    hindi: { subject: false, content: false }, 
-    marathi: { subject: false, content: false } 
+  const [translating, setTranslating] = useState({
+    hindi: { subject: false, content: false },
+    marathi: { subject: false, content: false }
   });
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -41,15 +38,25 @@ const ComposeEmail = ({ onRecordSaved }) => {
     "Administration": {
       "Principal": ["Principal-1@kkwagh.edu.in"],
       "Dean": [
-        "Dean-1@kkwagh.edu.in", "Dean-2@kkwagh.edu.in", "Dean-3@kkwagh.edu.in",
-        "Dean-4@kkwagh.edu.in", "Dean-5@kkwagh.edu.in", "Dean-6@kkwagh.edu.in", "Dean-7@kkwagh.edu.in",
+        "Dean-1@kkwagh.edu.in",
+        "Dean-2@kkwagh.edu.in",
+        "Dean-3@kkwagh.edu.in",
+        "Dean-4@kkwagh.edu.in",
+        "Dean-5@kkwagh.edu.in",
+        "Dean-6@kkwagh.edu.in",
+        "Dean-7@kkwagh.edu.in",
       ]
     },
     "Department Heads": {
       "HOD": [
-        "hrishikeshgavai@gmail.com", "dkpatil370123@kkwagh.edu.in", "dapagar370123@kkwagh.edu.in",
-        "dhruveshpatil7777@gmail.com", "nakshatrarao48@gmail.com", "pmlokwani370123@kkwagh.edu.in",
-        "hagavai370123@kkwagh.edu.in", "ranjit.pawar5142@gmail.com",
+        "hrishikeshgavai@gmail.com",
+        "dkpatil370123@kkwagh.edu.in",
+        "dapagar370123@kkwagh.edu.in",
+        "dhruveshpatil7777@gmail.com",
+        "nakshatrarao48@gmail.com",
+        "pmlokwani370123@kkwagh.edu.in",
+        "hagavai370123@kkwagh.edu.in",
+        "ranjit.pawar5142@gmail.com",
       ]
     }
   };
@@ -82,6 +89,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
     if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
       e.preventDefault();
       const newEmail = emailInput.trim().replace(/[,;\s]+$/, "");
+
       if (newEmail && isValidEmail(newEmail)) {
         addEmail(newEmail);
       } else if (newEmail && !isValidEmail(newEmail)) {
@@ -143,13 +151,13 @@ const ComposeEmail = ({ onRecordSaved }) => {
       return true;
     });
 
-    // Use promise notification for file uploads
     showPromiseNotification(
       Promise.all(
         validFiles.map(async (file) => {
           try {
             const fileName = `${Date.now()}-${file.name}`;
             const { error } = await supabase.storage.from("pdfs").upload(fileName, file);
+
             if (error) throw error;
 
             setFormData((prev) => ({
@@ -210,12 +218,11 @@ const ComposeEmail = ({ onRecordSaved }) => {
       return;
     }
 
-    // Use promise notification for translation
     showPromiseNotification(
       new Promise(async (resolve, reject) => {
-        setTranslating(prev => ({ 
-          ...prev, 
-          [language]: { ...prev[language], [type]: true } 
+        setTranslating(prev => ({
+          ...prev,
+          [language]: { ...prev[language], [type]: true }
         }));
 
         try {
@@ -229,7 +236,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
           }
 
           const data = await response.json();
-          
+
           if (data.responseStatus !== 200) {
             throw new Error('Translation failed: ' + data.responseDetails);
           }
@@ -237,25 +244,25 @@ const ComposeEmail = ({ onRecordSaved }) => {
           const translatedText = data.responseData.translatedText;
 
           if (type === 'subject') {
-            setFormData(prev => ({ 
-              ...prev, 
-              [`subject${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
+            setFormData(prev => ({
+              ...prev,
+              [`subject${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText
             }));
           } else {
-            setFormData(prev => ({ 
-              ...prev, 
-              [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
+            setFormData(prev => ({
+              ...prev,
+              [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText
             }));
           }
-          
+
           resolve(translatedText);
         } catch (error) {
           console.error('Translation error:', error);
           reject(error);
         } finally {
-          setTranslating(prev => ({ 
-            ...prev, 
-            [language]: { ...prev[language], [type]: false } 
+          setTranslating(prev => ({
+            ...prev,
+            [language]: { ...prev[language], [type]: false }
           }));
         }
       }),
@@ -279,6 +286,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
 
     setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from("email_records")
@@ -297,10 +305,12 @@ const ComposeEmail = ({ onRecordSaved }) => {
           },
         ])
         .select();
+
       if (error) throw error;
+
       const insertedRow = data[0];
       showNotification("Email record saved successfully!", "success");
-      
+
       // Reset form but keep sender email
       setFormData({
         from: formData.from,
@@ -316,7 +326,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
         sentDate: new Date().toISOString().split("T")[0],
       });
       setEmailInput("");
-      
+
       if (onRecordSaved) onRecordSaved(insertedRow);
     } catch (err) {
       console.error("Error saving email record:", err);
@@ -337,31 +347,27 @@ const ComposeEmail = ({ onRecordSaved }) => {
       return;
     }
 
-    // Use promise notification for the entire process
     showPromiseNotification(
       new Promise(async (resolve, reject) => {
         try {
           const toEmails = formData.to.join(',');
           const subject = formData.subject || '';
           let body = formData.content || '';
-          
+
           // Add translations to email body
           if (formData.contentHindi || formData.contentMarathi) {
             body += '\n\n--- Translations ---\n';
-            
             if (formData.contentHindi) {
               body += `\nHindi:\n${formData.contentHindi}\n`;
             }
-            
             if (formData.contentMarathi) {
               body += `\nMarathi:\n${formData.contentMarathi}\n`;
             }
           }
-          
-          const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
+          const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
           const gmailWindow = window.open(gmailUrl, '_blank');
-          
+
           if (gmailWindow) {
             // Auto-save after a short delay
             setTimeout(async () => {
@@ -402,397 +408,522 @@ const ComposeEmail = ({ onRecordSaved }) => {
   };
 
   return (
-    <div className="page active">
-      <div className="page-header">
-        <h2 className="page-title">
-          <Mail size={32} />
-          Compose Professional Email
-        </h2>
-        <p className="page-subtitle">Create and send professional emails with multi-language support</p>
+    <div className="card">
+      <div className="card-header">
+        <div className="card-header-icon">
+          <Mail size={24} />
+        </div>
+        <div className="card-header-text">
+          <h2>Compose Email</h2>
+          <p>Create and send professional emails with multi-language support</p>
+        </div>
       </div>
-      
-      <div className="card">
-        <div className="form-group">
-          <label>
-            <User size={18} />
-            From Email
-          </label>
-          <input 
-            type="email" 
-            name="from" 
-            value={formData.from} 
-            onChange={handleInputChange} 
-            placeholder="your-email@domain.com" 
-            className="form-input"
-          />
-          <div className="form-hint">Your email address will be saved for future use</div>
-        </div>
 
-        <div className="form-group">
-          <div className="form-label-row">
-            <label>
-              <Mail size={18} />
-              To Recipients
-            </label>
-            {formData.to.length > 0 && (
-              <button 
-                type="button" 
-                className="clear-all-btn"
-                onClick={clearAllEmails}
-              >
-                Clear All
-              </button>
-            )}
-          </div>
-          
-          <div className="email-input-container" ref={dropdownRef}>
-            <div className={`selected-emails ${formData.to.length > 0 ? 'has-emails' : ''}`}>
-              {formData.to.map((email) => (
-                <span key={email} className="email-chip">
-                  {email} 
-                  <button 
-                    type="button" 
-                    onClick={() => removeEmail(email)}
-                    className="chip-remove"
-                  >
-                    <X size={14} />
-                  </button>
-                </span>
-              ))}
-              <input 
-                ref={toInputRef}
-                type="text" 
-                className="email-input" 
-                placeholder={formData.to.length === 0 ? "Type email and press Enter, or select from dropdown..." : "Add more recipients..."}
-                value={emailInput}
-                onChange={handleEmailInputChange}
-                onKeyDown={handleManualEmailInput}
-                onBlur={(e) => {
-                  if (emailInput.trim() && isValidEmail(emailInput.trim())) {
-                    addEmail(emailInput.trim());
-                    setEmailInput("");
-                  }
+      {/* From Field */}
+      <div className="form-group">
+        <label className="form-label">
+          <User size={18} />
+          From
+        </label>
+        <input
+          type="email"
+          name="from"
+          className="form-input"
+          placeholder="sender@example.com (optional)"
+          value={formData.from}
+          onChange={handleInputChange}
+        />
+      </div>
+
+      {/* To Field with Dropdown */}
+      <div className="form-group">
+        <label className="form-label">
+          <Mail size={18} />
+          To <span className="required">*</span>
+        </label>
+
+        <div style={{ position: 'relative' }} ref={dropdownRef}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px', 
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
+            padding: '12px',
+            border: '2px solid var(--border-light)',
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--white)',
+            minHeight: '48px',
+            transition: 'all var(--transition-base)'
+          }}>
+            {formData.to.map((email, index) => (
+              <span
+                key={index}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  background: 'var(--primary)',
+                  color: 'var(--white)',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
                 }}
-              />
-              <button 
-                type="button" 
-                className="dropdown-btn" 
-                onClick={toggleDropdown}
-                title="Select from email groups"
               >
-                <ChevronDown size={20} />
-              </button>
-            </div>
+                {email}
+                <button
+                  onClick={() => removeEmail(email)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: 'none',
+                    color: 'var(--white)',
+                    cursor: 'pointer',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
 
-            {dropdownOpen && (
-              <div className="dropdown-menu">
-                {!activeFolder ? (
-                  <>
-                    <div className="dropdown-header">
-                      Select Recipient Group
-                    </div>
-                    {Object.entries(emailOptions).map(([category, groups]) => (
-                      <div key={category} className="dropdown-category">
-                        <div className="category-title">{category}</div>
-                        {Object.entries(groups).map(([folder, emails]) => (
-                          <div key={folder} className="dropdown-item folder" onClick={() => setActiveFolder({category, folder})}>
-                            <Folder size={16} />
-                            {folder} 
-                            <span className="folder-count">{emails.length}</span>
+            <input
+              ref={toInputRef}
+              type="email"
+              className="form-input"
+              placeholder={formData.to.length === 0 ? "Type email and press Enter..." : "Add more..."}
+              value={emailInput}
+              onChange={handleEmailInputChange}
+              onKeyDown={handleManualEmailInput}
+              style={{
+                flex: 1,
+                minWidth: '200px',
+                border: 'none',
+                padding: '4px 8px',
+                outline: 'none',
+                background: 'transparent',
+              }}
+            />
+
+            <button
+              onClick={toggleDropdown}
+              className="btn btn-secondary btn-sm"
+              style={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}
+            >
+              <ChevronDown size={16} />
+              Quick Select
+            </button>
+          </div>
+
+          {formData.to.length > 0 && (
+            <button
+              onClick={clearAllEmails}
+              className="btn btn-danger btn-sm"
+              style={{ marginTop: '8px' }}
+            >
+              <Trash2 size={16} />
+              Clear All Recipients
+            </button>
+          )}
+
+          {dropdownOpen && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              marginTop: '8px',
+              background: 'var(--white)',
+              border: '2px solid var(--border-light)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-xl)',
+              zIndex: 'var(--z-dropdown)',
+              maxHeight: '400px',
+              overflowY: 'auto',
+            }}>
+              {Object.entries(emailOptions).map(([category, subcategories]) => (
+                <div key={category} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      background: 'var(--gray-50)',
+                      fontWeight: '600',
+                      fontSize: '0.875rem',
+                      color: 'var(--text-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      transition: 'background var(--transition-fast)',
+                    }}
+                    onClick={() => setActiveFolder(activeFolder === category ? null : category)}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--gray-100)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'var(--gray-50)'}
+                  >
+                    <Folder size={16} />
+                    {category}
+                    <ChevronDown 
+                      size={16} 
+                      style={{ 
+                        marginLeft: 'auto',
+                        transform: activeFolder === category ? 'rotate(180deg)' : 'rotate(0)',
+                        transition: 'transform var(--transition-base)',
+                      }} 
+                    />
+                  </div>
+
+                  {activeFolder === category && (
+                    <div>
+                      {Object.entries(subcategories).map(([subcat, emails]) => (
+                        <div key={subcat}>
+                          <div style={{
+                            padding: '10px 32px',
+                            fontSize: '0.8rem',
+                            fontWeight: '600',
+                            color: 'var(--text-secondary)',
+                            background: 'var(--bg-tertiary)',
+                          }}>
+                            {subcat}
                           </div>
-                        ))}
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    <button className="back-btn" onClick={() => setActiveFolder(null)}>
-                      <ArrowLeft size={16} />
-                      Back to Groups
-                    </button>
-                    <div className="dropdown-header">
-                      {activeFolder.folder} ({emailOptions[activeFolder.category][activeFolder.folder].length})
+                          {emails.map((email) => (
+                            <div
+                              key={email}
+                              onClick={() => addEmail(email)}
+                              style={{
+                                padding: '10px 48px',
+                                fontSize: '0.875rem',
+                                cursor: 'pointer',
+                                color: 'var(--text-secondary)',
+                                transition: 'all var(--transition-fast)',
+                                background: formData.to.includes(email) ? 'var(--primary-ultralight)' : 'transparent',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'var(--primary-ultralight)';
+                                e.currentTarget.style.color = 'var(--primary)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = formData.to.includes(email) ? 'var(--primary-ultralight)' : 'transparent';
+                                e.currentTarget.style.color = 'var(--text-secondary)';
+                              }}
+                            >
+                              {email}
+                              {formData.to.includes(email) && (
+                                <span style={{ 
+                                  marginLeft: '8px', 
+                                  color: 'var(--success)', 
+                                  fontWeight: '600' 
+                                }}>
+                                  ✓ Added
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                     </div>
-                    {emailOptions[activeFolder.category][activeFolder.folder].map((email) => (
-                      <div key={email} className="dropdown-item" onClick={() => addEmail(email)}>
-                        <Mail size={16} />
-                        {email}
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="form-hint">
-            <Info size={16} />
-            Add multiple recipients by typing emails and pressing Enter, or select from organized groups above
-          </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Subject Field */}
+      <div className="form-group">
+        <label className="form-label">
+          <FileText size={18} />
+          Subject <span className="required">*</span>
+        </label>
+        <input
+          type="text"
+          name="subject"
+          className="form-input"
+          placeholder="Enter email subject"
+          value={formData.subject}
+          onChange={handleInputChange}
+        />
+      </div>
+
+      {/* Content Field */}
+      <div className="form-group">
+        <label className="form-label">
+          <FileText size={18} />
+          Content
+        </label>
+        <textarea
+          name="content"
+          className="form-textarea"
+          placeholder="Write your email content here..."
+          value={formData.content}
+          onChange={handleInputChange}
+          rows={6}
+        />
+      </div>
+
+      {/* Translation Section */}
+      <div style={{
+        background: 'var(--gray-50)',
+        padding: 'var(--space-xl)',
+        borderRadius: 'var(--radius-md)',
+        marginBottom: 'var(--space-xl)',
+        border: '1px solid var(--border-light)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-md)',
+          marginBottom: 'var(--space-lg)',
+        }}>
+          <Languages size={20} style={{ color: 'var(--primary)' }} />
+          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>Multi-Language Translation</h3>
         </div>
 
-        <div className="form-group">
-          <label>Email Subject</label>
-          <div className="translation-controls">
-            <input 
-              type="text" 
-              name="subject" 
-              value={formData.subject} 
-              onChange={handleInputChange} 
-              placeholder="Enter email subject..." 
-              className="form-input"
-            />
-            <div className="translation-buttons">
-              <button 
-                type="button"
+        {/* Hindi Translation */}
+        <div style={{ marginBottom: 'var(--space-lg)' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: 'var(--space-sm)',
+          }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>
+              Hindi Translation
+            </label>
+            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+              <button
+                className="btn btn-sm btn-secondary"
                 onClick={() => translateText(formData.subject, 'subject', 'hindi')}
                 disabled={translating.hindi.subject || !formData.subject.trim()}
-                className="translate-btn hindi-btn"
-                title="Translate to Hindi"
               >
-                {translating.hindi.subject ? (
-                  <InlineLoading size="small" text="Translating..." />
-                ) : (
-                  <>
-                    <Languages size={16} />
-                    Hindi
-                  </>
-                )}
+                {translating.hindi.subject ? <InlineLoading /> : <Languages size={14} />}
+                Translate Subject
               </button>
-              <button 
-                type="button"
-                onClick={() => translateText(formData.subject, 'subject', 'marathi')}
-                disabled={translating.marathi.subject || !formData.subject.trim()}
-                className="translate-btn marathi-btn"
-                title="Translate to Marathi"
-              >
-                {translating.marathi.subject ? (
-                  <InlineLoading size="small" text="Translating..." />
-                ) : (
-                  <>
-                    <Languages size={16} />
-                    Marathi
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label>Email Content</label>
-          <div className="translation-controls">
-            <textarea 
-              name="content" 
-              value={formData.content} 
-              onChange={handleInputChange} 
-              rows={6} 
-              placeholder="Write your email content here..."
-              className="form-textarea"
-            />
-            <div className="translation-buttons">
-              <button 
-                type="button"
+              <button
+                className="btn btn-sm btn-secondary"
                 onClick={() => translateText(formData.content, 'content', 'hindi')}
                 disabled={translating.hindi.content || !formData.content.trim()}
-                className="translate-btn hindi-btn"
-                title="Translate to Hindi"
               >
-                {translating.hindi.content ? (
-                  <InlineLoading size="small" text="Translating..." />
-                ) : (
-                  <>
-                    <Languages size={16} />
-                    Hindi
-                  </>
-                )}
-              </button>
-              <button 
-                type="button"
-                onClick={() => translateText(formData.content, 'content', 'marathi')}
-                disabled={translating.marathi.content || !formData.content.trim()}
-                className="translate-btn marathi-btn"
-                title="Translate to Marathi"
-              >
-                {translating.marathi.content ? (
-                  <InlineLoading size="small" text="Translating..." />
-                ) : (
-                  <>
-                    <Languages size={16} />
-                    Marathi
-                  </>
-                )}
+                {translating.hindi.content ? <InlineLoading /> : <Languages size={14} />}
+                Translate Content
               </button>
             </div>
           </div>
-        </div>
-        
-        <div className="form-group">
-          <label>
-            <Calendar size={18} />
-            Sent Date
-          </label>
-          <input 
-            type="date" 
-            name="sentDate" 
-            value={formData.sentDate} 
-            onChange={handleInputChange} 
+          <input
+            type="text"
+            name="subjectHindi"
             className="form-input"
+            placeholder="Hindi subject (auto-translated)"
+            value={formData.subjectHindi}
+            onChange={handleInputChange}
+            style={{ marginBottom: 'var(--space-sm)' }}
+          />
+          <textarea
+            name="contentHindi"
+            className="form-textarea"
+            placeholder="Hindi content (auto-translated)"
+            value={formData.contentHindi}
+            onChange={handleInputChange}
+            rows={4}
           />
         </div>
 
-        <div className="form-group">
-          <label>
-            <FileText size={18} />
-            Attach PDF Files
-          </label>
-          <div 
-            className={`file-upload-area ${dragOver ? 'drag-over' : ''} ${formData.pdfFiles.length > 0 ? 'has-files' : ''}`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <input 
-              ref={fileInputRef} 
-              type="file" 
-              accept=".pdf" 
-              multiple 
-              onChange={handleFileInputChange} 
-              style={{ display: 'none' }}
-            />
-            <div className="upload-content">
-              <FileText size={48} className="upload-icon" />
-              <button 
-                type="button" 
-                className="file-upload-btn"
-                onClick={() => fileInputRef.current?.click()}
+        {/* Marathi Translation */}
+        <div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: 'var(--space-sm)',
+          }}>
+            <label className="form-label" style={{ marginBottom: 0 }}>
+              Marathi Translation
+            </label>
+            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+              <button
+                className="btn btn-sm btn-secondary"
+                onClick={() => translateText(formData.subject, 'subject', 'marathi')}
+                disabled={translating.marathi.subject || !formData.subject.trim()}
               >
-                <Upload size={20} />
-                Choose PDF Files
+                {translating.marathi.subject ? <InlineLoading /> : <Languages size={14} />}
+                Translate Subject
               </button>
-              <div className="file-upload-hint">
-                Drag and drop PDF files here or click to browse. Max 40MB per file.
-              </div>
+              <button
+                className="btn btn-sm btn-secondary"
+                onClick={() => translateText(formData.content, 'content', 'marathi')}
+                disabled={translating.marathi.content || !formData.content.trim()}
+              >
+                {translating.marathi.content ? <InlineLoading /> : <Languages size={14} />}
+                Translate Content
+              </button>
             </div>
-            
-            {formData.pdfFiles.length > 0 && (
-              <div className="file-list">
-                <div className="file-list-header">
-                  <span>Files to attach in Gmail ({formData.pdfFiles.length})</span>
-                </div>
-                <ul>
-                  {formData.pdfFiles.map((file, index) => (
-                    <li key={index}>
-                      <FileText size={18} className="file-icon" />
-                      <span className="file-name">{file.name}</span>
-                      <span className="file-size">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                      <button 
-                        type="button"
-                        className="file-remove"
-                        onClick={() => removeFile(index)}
-                        title="Remove file"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
+          <input
+            type="text"
+            name="subjectMarathi"
+            className="form-input"
+            placeholder="Marathi subject (auto-translated)"
+            value={formData.subjectMarathi}
+            onChange={handleInputChange}
+            style={{ marginBottom: 'var(--space-sm)' }}
+          />
+          <textarea
+            name="contentMarathi"
+            className="form-textarea"
+            placeholder="Marathi content (auto-translated)"
+            value={formData.contentMarathi}
+            onChange={handleInputChange}
+            rows={4}
+          />
+        </div>
+      </div>
+
+      {/* File Upload Section */}
+      <div className="form-group">
+        <label className="form-label">
+          <Paperclip size={18} />
+          Attachments (PDF only, max 40MB)
+        </label>
+
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          style={{
+            border: `2px dashed ${dragOver ? 'var(--primary)' : 'var(--border-medium)'}`,
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-xl)',
+            textAlign: 'center',
+            background: dragOver ? 'var(--primary-ultralight)' : 'var(--gray-50)',
+            transition: 'all var(--transition-base)',
+            cursor: 'pointer',
+          }}
+          onClick={() => fileInputRef.current.click()}
+        >
+          <Upload size={32} style={{ 
+            color: dragOver ? 'var(--primary)' : 'var(--text-muted)',
+            marginBottom: 'var(--space-sm)',
+          }} />
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            {dragOver ? 'Drop files here' : 'Drag & drop PDF files here, or click to browse'}
+          </p>
+          <p style={{ margin: 0, marginTop: '4px', color: 'var(--text-light)', fontSize: '0.875rem' }}>
+            Maximum file size: 40MB per file
+          </p>
         </div>
 
-        <div className="actions">
-          <button 
-            type="button"
-            onClick={openGmailAndSave} 
-            disabled={loading || !formData.to.length || !formData.subject.trim()}
-            className="primary-btn"
-          >
-            {loading ? (
-              <InlineLoading size="medium" text="Processing..." />
-            ) : (
-              <>
-                <Send size={20} />
-                Open in Gmail & Save
-              </>
-            )}
-          </button>
-          <button 
-            type="button"
-            onClick={saveEmailRecord} 
-            disabled={loading || !formData.to.length || !formData.subject.trim()}
-            className="secondary-btn"
-          >
-            {loading ? (
-              <InlineLoading size="medium" text="Saving..." />
-            ) : (
-              <>
-                <Save size={20} />
-                Save Record Only
-              </>
-            )}
-          </button>
-          <button 
-            type="button"
-            onClick={clearForm}
-            disabled={loading}
-            className="clear-btn"
-          >
-            <Trash2 size={20} />
-            Clear Form
-          </button>
-        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/pdf"
+          multiple
+          onChange={handleFileInputChange}
+          style={{ display: 'none' }}
+        />
 
-        {(formData.subjectHindi || formData.contentHindi || formData.subjectMarathi || formData.contentMarathi) && (
-          <div className="translated-box">
-            <h4>
-              <Languages size={24} />
-              Translations
-            </h4>
-            
-            {(formData.subjectHindi || formData.contentHindi) && (
-              <div className="language-section">
-                <h5>
-                  <Languages size={18} />
-                  Hindi Translation
-                </h5>
-                {formData.subjectHindi && (
-                  <div className="translated-item">
-                    <strong>Subject:</strong>
-                    <div className="hindi-content">{formData.subjectHindi}</div>
+        {formData.pdfFiles.length > 0 && (
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            {formData.pdfFiles.map((file, index) => (
+              <div
+                key={index}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: 'var(--space-md)',
+                  background: 'var(--white)',
+                  border: '1px solid var(--border-light)',
+                  borderRadius: 'var(--radius-md)',
+                  marginBottom: 'var(--space-sm)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                  <FileText size={24} style={{ color: 'var(--error)' }} />
+                  <div>
+                    <p style={{ margin: 0, fontWeight: '500', fontSize: '0.95rem' }}>{file.name}</p>
+                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
                   </div>
-                )}
-                {formData.contentHindi && (
-                  <div className="translated-item">
-                    <strong>Content:</strong>
-                    <div className="hindi-content">{formData.contentHindi}</div>
-                  </div>
-                )}
+                </div>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="btn btn-danger btn-sm"
+                >
+                  <X size={16} />
+                </button>
               </div>
-            )}
-            
-            {(formData.subjectMarathi || formData.contentMarathi) && (
-              <div className="language-section">
-                <h5>
-                  <Languages size={18} />
-                  Marathi Translation
-                </h5>
-                {formData.subjectMarathi && (
-                  <div className="translated-item">
-                    <strong>Subject:</strong>
-                    <div className="marathi-content">{formData.subjectMarathi}</div>
-                  </div>
-                )}
-                {formData.contentMarathi && (
-                  <div className="translated-item">
-                    <strong>Content:</strong>
-                    <div className="marathi-content">{formData.contentMarathi}</div>
-                  </div>
-                )}
-              </div>
-            )}
+            ))}
           </div>
         )}
+      </div>
+
+      {/* Sent Date */}
+      <div className="form-group">
+        <label className="form-label">
+          <Calendar size={18} />
+          Sent Date
+        </label>
+        <input
+          type="date"
+          name="sentDate"
+          className="form-input"
+          value={formData.sentDate}
+          onChange={handleInputChange}
+        />
+      </div>
+
+      {/* Action Buttons */}
+      <div className="button-group">
+        <button
+          onClick={openGmailAndSave}
+          className="btn btn-primary btn-lg"
+          disabled={loading || !formData.to.length || !formData.subject.trim()}
+        >
+          {loading ? <InlineLoading /> : <Send size={18} />}
+          Open in Gmail & Save
+        </button>
+
+        <button
+          onClick={saveEmailRecord}
+          className="btn btn-success btn-lg"
+          disabled={loading || !formData.to.length || !formData.subject.trim()}
+        >
+          {loading ? <InlineLoading /> : <Save size={18} />}
+          Save Record Only
+        </button>
+
+        <button
+          onClick={clearForm}
+          className="btn btn-secondary"
+          disabled={loading}
+        >
+          <Trash2 size={18} />
+          Clear Form
+        </button>
+      </div>
+
+      <div style={{
+        marginTop: 'var(--space-lg)',
+        padding: 'var(--space-md)',
+        background: 'var(--primary-ultralight)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--primary-light)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 'var(--space-sm)',
+      }}>
+        <Info size={20} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
+        <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+          <strong style={{ color: 'var(--primary)' }}>Tip:</strong> You can type email addresses directly or use the Quick Select dropdown to choose from predefined contacts. Press Enter, comma, or Tab to add multiple emails.
+        </div>
       </div>
     </div>
   );
