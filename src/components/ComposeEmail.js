@@ -1,312 +1,321 @@
-import React, { useState } from 'react'
-import { supabase } from '../services/supabase'
-import { showNotification } from '../utils/notifications'
+import React, { useState, useRef } from "react";
+import { supabase } from "../services/supabase";
+import { showNotification } from "../utils/notifications";
 
-const ComposeEmail = () => {
+const ComposeEmail = ({ onRecordSaved }) => {
+  const backendUrl = import.meta.env.VITE_BACKEND_URL; // ✅ Vite env
   const [formData, setFormData] = useState({
-    from: '',
-    to: '',
-    date: new Date().toISOString().split('T')[0],
-    subject: '',
-    content: '',
-    pdfFile: null
-  })
-  const [subjectHindi, setSubjectHindi] = useState('')
-  const [contentHindi, setContentHindi] = useState('')
-  const [showHindi, setShowHindi] = useState({ subject: false, content: false })
-  const [loading, setLoading] = useState(false)
-  const [translating, setTranslating] = useState({ subject: false, content: false })
-  const [showDropdown, setShowDropdown] = useState({ from: false, to: false })
-  const [activeCategory, setActiveCategory] = useState({ from: null, to: null })
+    from: "",
+    to: [],
+    subject: "",
+    content: "",
+    pdfFiles: [],
+    pdfFileNames: [],
+    subjectHindi: "",
+    contentHindi: "",
+    sentDate: new Date().toISOString().split("T")[0],
+  });
 
-  // Backend URL from env
-  const backendUrl = import.meta.env.VITE_BACKEND_URL
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [activeFolder, setActiveFolder] = useState(null);
+  const [translating, setTranslating] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Email options data
+  const fileInputRef = useRef(null);
+
   const emailOptions = {
-    Principal: ['Principal-1@kkwagh.edu.in'],
+    Principal: ["Principal-1@kkwagh.edu.in"],
     HOD: [
-      'HOD-1@kkwagh.edu.in',
-      'HOD-2@kkwagh.edu.in',
-      'HOD-3@kkwagh.edu.in',
-      'HOD-4@kkwagh.edu.in',
-      'HOD-5@kkwagh.edu.in',
-      'HOD-6@kkwagh.edu.in',
-      'HOD-7@kkwagh.edu.in'
+      "dkpatil370123@kkwagh.edu.in",
+      "dapagar370123@kkwagh.edu.in",
+      "dhruveshpatil7777@gmail.com",
+      "nakshatrarao48@gmail.com",
+      "pmlokwani370123@kkwagh.edu.in",
+      "hagavai370123@kkwagh.edu.in",
+      "ranjit.pawar5142@gmail.com",
     ],
     Dean: [
-      'Dean-1@kkwagh.edu.in',
-      'Dean-2@kkwagh.edu.in',
-      'Dean-3@kkwagh.edu.in',
-      'Dean-4@kkwagh.edu.in',
-      'Dean-5@kkwagh.edu.in',
-      'Dean-6@kkwagh.edu.in',
-      'Dean-7@kkwagh.edu.in'
-    ]
-  }
+      "Dean-1@kkwagh.edu.in",
+      "Dean-2@kkwagh.edu.in",
+      "Dean-3@kkwagh.edu.in",
+      "Dean-4@kkwagh.edu.in",
+      "Dean-5@kkwagh.edu.in",
+      "Dean-6@kkwagh.edu.in",
+      "Dean-7@kkwagh.edu.in",
+    ],
+  };
 
+  // --- Input handlers ---
   const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleFileUpload = (e) => {
-    setFormData(prev => ({ ...prev, pdfFile: e.target.files[0] }))
-  }
-
-  const toggleDropdown = (field) => {
-    setShowDropdown(prev => ({ ...prev, [field]: !prev[field] }))
-    setActiveCategory(prev => ({ ...prev, [field]: null }))
-  }
-
-  const selectEmail = (field, email) => {
-    setFormData(prev => ({ ...prev, [field]: email }))
-    setShowDropdown(prev => ({ ...prev, [field]: false }))
-    setActiveCategory(prev => ({ ...prev, [field]: null }))
-  }
-
-  const selectCategory = (field, category) => {
-    setActiveCategory(prev => ({ ...prev, [field]: category }))
-  }
-
-  // ✅ Updated translation using backend
-  const translateText = async (text, type) => {
-    if (!text.trim()) {
-      showNotification('Please enter text to translate', 'warning')
-      return
-    }
-
-    setTranslating(prev => ({ ...prev, [type]: true }))
-
-    try {
-      const response = await fetch(`${backendUrl}/api/translate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, target: "hi" }) // Hindi
-      })
-
-      if (!response.ok) throw new Error('Translation API request failed')
-
-      const data = await response.json()
-      const translatedText = data.translatedText
-
-      if (type === 'subject') {
-        setSubjectHindi(translatedText)
-        setShowHindi(prev => ({ ...prev, subject: true }))
-      } else {
-        setContentHindi(translatedText)
-        setShowHindi(prev => ({ ...prev, content: true }))
+  const handleManualEmailInput = (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const newEmail = e.target.value.trim().replace(",", "");
+      if (newEmail && !formData.to.includes(newEmail)) {
+        setFormData((prev) => ({ ...prev, to: [...prev.to, newEmail] }));
       }
-
-      showNotification('Text translated successfully', 'success')
-    } catch (error) {
-      console.error('Translation error:', error)
-      showNotification('Translation failed', 'error')
-    } finally {
-      setTranslating(prev => ({ ...prev, [type]: false }))
+      e.target.value = "";
     }
-  }
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+  const addEmail = (email) => {
+    if (!formData.to.includes(email)) {
+      setFormData((prev) => ({ ...prev, to: [...prev.to, email] }));
+    }
+  };
 
-    try {
-      let pdfFilename = null
+  const removeEmail = (email) => {
+    setFormData((prev) => ({
+      ...prev,
+      to: prev.to.filter((e) => e !== email),
+    }));
+  };
 
-      if (formData.pdfFile) {
-        if (formData.pdfFile.size > 40 * 1024 * 1024) {
-          throw new Error('File size exceeds 40MB limit')
+  const toggleDropdown = () => {
+    setDropdownOpen((prev) => !prev);
+    setActiveFolder(null);
+  };
+
+  // --- PDF Upload ---
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    for (let file of files) {
+      try {
+        if (file.size > 40 * 1024 * 1024) {
+          showNotification(`${file.name}: exceeds 40MB`, "error");
+          continue;
         }
 
-        const fileExt = formData.pdfFile.name.split('.').pop()
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+        const fileName = `${Date.now()}-${file.name}`;
+        const { error } = await supabase.storage.from("pdfs").upload(fileName, file);
+        if (error) throw error;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('pdfs')
-          .upload(fileName, formData.pdfFile)
+        setFormData((prev) => ({
+          ...prev,
+          pdfFiles: [...prev.pdfFiles, file],
+          pdfFileNames: [...prev.pdfFileNames, fileName],
+        }));
 
-        if (uploadError) throw new Error(`File upload failed: ${uploadError.message}`)
-
-        pdfFilename = fileName
+        showNotification(`Uploaded: ${file.name}`, "success");
+      } catch (err) {
+        console.error("PDF upload error:", err);
+        showNotification(`Failed to upload: ${file.name}`, "error");
       }
-
-      const { data, error: insertError } = await supabase
-        .from('email_records')
-        .insert({
-          from_user: formData.from,
-          to_user: formData.to,
-          subject: formData.subject,
-          content: formData.content,
-          subject_hindi: subjectHindi,
-          content_hindi: contentHindi,
-          pdf_filename: pdfFilename,
-          sent_date: formData.date
-        })
-        .select()
-
-      if (insertError) throw new Error(`Database insert failed: ${insertError.message}`)
-
-      // Reset form
-      setFormData({
-        from: '',
-        to: '',
-        date: new Date().toISOString().split('T')[0],
-        subject: '',
-        content: '',
-        pdfFile: null
-      })
-      setSubjectHindi('')
-      setContentHindi('')
-      setShowHindi({ subject: false, content: false })
-
-      showNotification('Email sent and saved successfully!', 'success')
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      showNotification(`Failed to send email: ${error.message}`, 'error')
-    } finally {
-      setLoading(false)
     }
-  }
+  };
+
+  // --- Translation to Hindi ---
+  const translateToHindi = async () => {
+    if (!formData.subject && !formData.content) {
+      showNotification("Enter subject or content to translate", "warning");
+      return;
+    }
+    setTranslating(true);
+    const combined = `${formData.subject}\n\n${formData.content}`.trim();
+
+    try {
+      const resp = await fetch(`${backendUrl}/api/translate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: combined, target: "hi" }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const parts = (data.translatedText || "").split("\n\n");
+        setFormData((prev) => ({
+          ...prev,
+          subjectHindi: parts[0] || "",
+          contentHindi: parts.slice(1).join("\n\n") || "",
+        }));
+        showNotification("Translated to Hindi successfully!", "success");
+        setTranslating(false);
+        return;
+      }
+    } catch (err) {
+      console.warn("Translation failed, falling back:", err);
+    }
+
+    // fallback
+    setFormData((prev) => ({
+      ...prev,
+      subjectHindi: simpleTransliteration(formData.subject || ""),
+      contentHindi: simpleTransliteration(formData.content || ""),
+    }));
+    showNotification("Used fallback transliteration", "info");
+    setTranslating(false);
+  };
+
+  const simpleTransliteration = (text) => {
+    if (!text) return "";
+    const map = { hello: "नमस्ते", email: "ईमेल", message: "संदेश" };
+    let out = text;
+    Object.entries(map).forEach(([k, v]) => {
+      const re = new RegExp(`\\b${k}\\b`, "gi");
+      out = out.replace(re, v);
+    });
+    return out === text ? `हिंदी अनुवाद: ${text}` : out;
+  };
+
+  // --- Save record ---
+  const saveEmailRecord = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("email_records")
+        .insert([
+          {
+            from_user: formData.from || "demoxiepaulo@gmail.com",
+            to_user: formData.to.join(","),
+            subject: formData.subject,
+            content: formData.content,
+            subject_hindi: formData.subjectHindi,
+            content_hindi: formData.contentHindi,
+            pdf_filename: formData.pdfFileNames.length
+              ? formData.pdfFileNames.join(",")
+              : null,
+            sent_date: formData.sentDate,
+          },
+        ])
+        .select();
+
+      if (error) throw error;
+      const insertedRow = data[0];
+      showNotification("Email record saved!", "success");
+      if (onRecordSaved) onRecordSaved(insertedRow);
+    } catch (err) {
+      console.error("Error saving email record:", err);
+      showNotification("Failed to save email record", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Open Gmail & Save ---
+  const openGmailAndSave = async () => {
+    const to = encodeURIComponent(formData.to.join(","));
+    const subject = encodeURIComponent(formData.subject || "");
+    const bodyText =
+      (formData.content || "") +
+      (formData.pdfFiles.length
+        ? `\n\n[Attach PDFs manually: ${formData.pdfFiles.map((f) => f.name).join(", ")}]`
+        : "");
+    const body = encodeURIComponent(bodyText);
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}&body=${body}&authuser=${encodeURIComponent(
+      formData.from || "demoxiepaulo@gmail.com"
+    )}`;
+    window.open(gmailUrl, "_blank");
+    await saveEmailRecord();
+  };
 
   return (
     <div className="page active">
       <h2 className="page-title">Compose Professional Email</h2>
       <div className="card">
-        <form onSubmit={handleSubmit}>
-          {/* From Field */}
-          <div className="form-group">
-            <label className="form-label">From</label>
-            <div className="input-with-dropdown">
+        {/* From */}
+        <div className="form-group">
+          <label>From</label>
+          <input
+            type="email"
+            name="from"
+            value={formData.from}
+            onChange={handleInputChange}
+            placeholder="Sender email"
+          />
+        </div>
+
+        {/* To */}
+        <div className="form-group">
+          <label>To</label>
+          <div className="email-input-container">
+            <div className="selected-emails">
+              {formData.to.map((email) => (
+                <span key={email} className="email-chip">
+                  {email}
+                  <button type="button" onClick={() => removeEmail(email)}>×</button>
+                </span>
+              ))}
               <input
-                type="email"
-                className="form-input"
-                name="from"
-                value={formData.from}
-                onChange={handleInputChange}
-                placeholder="Enter sender's email address"
-                required
+                type="text"
+                className="email-input"
+                placeholder="Type or select recipient..."
+                onKeyDown={handleManualEmailInput}
               />
-              <button type="button" className="dropdown-btn" onClick={() => toggleDropdown('from')}>
-                <i className="fas fa-chevron-down"></i>
-              </button>
-              {showDropdown.from && (
-                <div className="dropdown-menu">
-                  <div className="dropdown-title">
-                    {activeCategory.from ? `Select ${activeCategory.from} Email` : 'Select Category'}
-                    {activeCategory.from && (
-                      <button className="dropdown-back" onClick={() => selectCategory('from', null)}>
-                        <i className="fas fa-arrow-left"></i> Back
-                      </button>
-                    )}
-                  </div>
-                  {!activeCategory.from
-                    ? Object.keys(emailOptions).map(category => (
-                        <div key={category} className="dropdown-item category-item" onClick={() => selectCategory('from', category)}>
-                          <i className="fas fa-folder"></i> {category}
-                          <span className="dropdown-arrow">▶</span>
-                        </div>
-                      ))
-                    : emailOptions[activeCategory.from].map(email => (
-                        <div key={email} className="dropdown-item email-item" onClick={() => selectEmail('from', email)}>
-                          <i className="fas fa-envelope"></i> {email}
-                        </div>
-                      ))}
-                </div>
-              )}
+              <button type="button" className="dropdown-btn" onClick={toggleDropdown}>▾</button>
             </div>
-          </div>
 
-          {/* To Field */}
-          <div className="form-group">
-            <label className="form-label">To</label>
-            <div className="input-with-dropdown">
-              <input
-                type="email"
-                className="form-input"
-                name="to"
-                value={formData.to}
-                onChange={handleInputChange}
-                placeholder="Enter recipient's email address"
-                required
-              />
-              <button type="button" className="dropdown-btn" onClick={() => toggleDropdown('to')}>
-                <i className="fas fa-chevron-down"></i>
-              </button>
-              {showDropdown.to && (
-                <div className="dropdown-menu">
-                  <div className="dropdown-title">
-                    {activeCategory.to ? `Select ${activeCategory.to} Email` : 'Select Category'}
-                    {activeCategory.to && (
-                      <button className="dropdown-back" onClick={() => selectCategory('to', null)}>
-                        <i className="fas fa-arrow-left"></i> Back
-                      </button>
-                    )}
-                  </div>
-                  {!activeCategory.to
-                    ? Object.keys(emailOptions).map(category => (
-                        <div key={category} className="dropdown-item category-item" onClick={() => selectCategory('to', category)}>
-                          <i className="fas fa-folder"></i> {category}
-                          <span className="dropdown-arrow">▶</span>
-                        </div>
-                      ))
-                    : emailOptions[activeCategory.to].map(email => (
-                        <div key={email} className="dropdown-item email-item" onClick={() => selectEmail('to', email)}>
-                          <i className="fas fa-envelope"></i> {email}
-                        </div>
-                      ))}
-                </div>
-              )}
-            </div>
+            {dropdownOpen && (
+              <div className="dropdown-menu">
+                {!activeFolder ? (
+                  Object.keys(emailOptions).map((folder) => (
+                    <div key={folder} className="dropdown-item folder" onClick={() => setActiveFolder(folder)}>
+                      📁 {folder}
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {emailOptions[activeFolder].map((email) => (
+                      <div key={email} className="dropdown-item" onClick={() => addEmail(email)}>✉ {email}</div>
+                    ))}
+                    <button className="back-btn" onClick={() => setActiveFolder(null)}>← Back</button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
+        </div>
 
-          {/* Date, Subject, Content, PDF, Submit */}
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Date</label>
-              <input type="date" className="form-input" name="date" value={formData.date} onChange={handleInputChange} required />
-            </div>
-          </div>
+        {/* Subject */}
+        <div className="form-group">
+          <label>Subject</label>
+          <input type="text" name="subject" value={formData.subject} onChange={handleInputChange} />
+        </div>
 
-          <div className="form-group">
-            <label className="form-label">Subject</label>
-            <div className="translation-row">
-              <input type="text" className="form-input" name="subject" value={formData.subject} onChange={handleInputChange} placeholder="Enter email subject..." required />
-              <button type="button" className="translate-btn" onClick={() => translateText(formData.subject, 'subject')} disabled={translating.subject}>
-                <i className="fas fa-language"></i> {translating.subject ? 'Translating...' : 'Translate'}
-              </button>
-            </div>
-            {showHindi.subject && <div className="hindi-text"><strong>Hindi Translation:</strong> {subjectHindi}</div>}
-          </div>
+        {/* Content */}
+        <div className="form-group">
+          <label>Content</label>
+          <textarea name="content" value={formData.content} onChange={handleInputChange} rows={6} />
+        </div>
 
-          <div className="form-group">
-            <label className="form-label">Email Content</label>
-            <div className="translation-row">
-              <textarea className="form-textarea" name="content" value={formData.content} onChange={handleInputChange} placeholder="Write your email content here..." required></textarea>
-              <button type="button" className="translate-btn" onClick={() => translateText(formData.content, 'content')} disabled={translating.content}>
-                <i className="fas fa-language"></i> {translating.content ? 'Translating...' : 'Translate'}
-              </button>
-            </div>
-            {showHindi.content && <div className="hindi-text"><strong>Hindi Translation:</strong> {contentHindi}</div>}
-          </div>
+        {/* Sent Date */}
+        <div className="form-group">
+          <label>Sent Date</label>
+          <input type="date" name="sentDate" value={formData.sentDate} onChange={handleInputChange} />
+        </div>
 
-          <div className="form-group">
-            <label className="form-label">Upload PDF Attachment</label>
-            <div className="file-upload" onClick={() => document.getElementById('pdfFile').click()}>
-              <input type="file" id="pdfFile" accept=".pdf" onChange={handleFileUpload} style={{ display: 'none' }} />
-              <div className="file-upload-icon"><i className="fas fa-cloud-upload-alt"></i></div>
-              <div className="file-upload-text">{formData.pdfFile ? formData.pdfFile.name : 'Click to upload PDF or drag and drop'}</div>
-              <div className="file-upload-subtext">Maximum file size: 40MB</div>
-            </div>
-          </div>
+        {/* PDFs */}
+        <div className="form-group">
+          <label>Upload PDFs</label>
+          <input ref={fileInputRef} type="file" accept=".pdf" multiple onChange={handleFileUpload} />
+          {formData.pdfFiles.length > 0 && (
+            <ul>{formData.pdfFiles.map((f, i) => <li key={i}>{f.name}</li>)}</ul>
+          )}
+        </div>
 
-          <button type="submit" className="submit-btn" disabled={loading}>
-            <i className="fas fa-paper-plane"></i> {loading ? 'Recording...' : 'Record Email'}
+        {/* Buttons */}
+        <div className="actions">
+          <button onClick={translateToHindi} disabled={translating}>
+            {translating ? "Translating..." : "Translate to Hindi"}
           </button>
-        </form>
+          <button onClick={openGmailAndSave} disabled={loading}>Open in Gmail & Save</button>
+          <button onClick={saveEmailRecord} disabled={loading}>Save Only</button>
+        </div>
+
+        {/* Hindi */}
+        {(formData.subjectHindi || formData.contentHindi) && (
+          <div className="translated-box">
+            {formData.subjectHindi && <div><strong>Subject (Hindi):</strong> {formData.subjectHindi}</div>}
+            {formData.contentHindi && <div><strong>Content (Hindi):</strong><pre>{formData.contentHindi}</pre></div>}
+          </div>
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ComposeEmail
+export default ComposeEmail;
