@@ -1,29 +1,88 @@
 import React from 'react';
+import { Mail, Database, HelpCircle, Github, ExternalLink } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleNavClick = (page) => {
+    // This would typically be handled by your router or state management
+    // For now, we'll just scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <footer className="footer">
+    <footer className="footer" id="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h3>UniMail Pro</h3>
-          <p>Professional email management system for educational institutions</p>
+          <h3>
+            <Mail size={24} />
+            UniMail Pro
+          </h3>
+          <p>Professional email management system designed for educational institutions. Streamline your communication with multi-language support and organized record keeping.</p>
         </div>
         
         <div className="footer-section">
-          <h4>Quick Links</h4>
+          <h4>
+            <Database size={20} />
+            Quick Links
+          </h4>
           <ul>
-            <li><a href="#compose">Compose Email</a></li>
-            <li><a href="#records">Email Records</a></li>
-            <li><a href="#help">Help & Support</a></li>
+            <li>
+              <a href="#compose" onClick={() => handleNavClick('compose')}>
+                <Mail size={16} />
+                Compose Email
+              </a>
+            </li>
+            <li>
+              <a href="#records" onClick={() => handleNavClick('records')}>
+                <Database size={16} />
+                Email Records
+              </a>
+            </li>
+            <li>
+              <a href="#help" onClick={() => scrollToSection('footer')}>
+                <HelpCircle size={16} />
+                Help & Support
+              </a>
+            </li>
           </ul>
         </div>
         
         <div className="footer-section">
-          <h4>Contact</h4>
-          <p>Email: support@unimailpro.com</p>
-          <p>Phone: +1 (555) 123-4567</p>
+          <h4>
+            <Github size={20} />
+            Developers
+          </h4>
+          <p>Built with modern web technologies</p>
+          <div className="github-links">
+            <a 
+              href="https://github.com/Hrishikesh-Gavai" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="github-link"
+            >
+              <Github size={18} />
+              Hrishikesh Gavai
+              <ExternalLink size={14} />
+            </a>
+            <a 
+              href="https://github.com/Dhruvesh05" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="github-link"
+            >
+              <Github size={18} />
+              Dhruvesh Patil
+              <ExternalLink size={14} />
+            </a>
+          </div>
         </div>
       </div>
       
