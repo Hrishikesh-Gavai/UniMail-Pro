@@ -95,7 +95,7 @@ const EmailRecords = () => {
         })
       );
 
-      // Prepare data for Excel
+      // Prepare data for Excel - Updated to include Marathi
       const excelData = recordsWithUrls.map(record => ({
         'From': record.from_user,
         'To': record.to_user,
@@ -104,6 +104,8 @@ const EmailRecords = () => {
         'Content': record.content,
         'Subject (Hindi)': record.subject_hindi || '',
         'Content (Hindi)': record.content_hindi || '',
+        'Subject (Marathi)': record.subject_marathi || '',
+        'Content (Marathi)': record.content_marathi || '',
         'PDF Attachment': record.pdf_filename ? 'Available' : 'No Attachment',
         'Created At': new Date(record.created_at).toLocaleString()
       }))
@@ -115,18 +117,17 @@ const EmailRecords = () => {
       // Add hyperlinks to the worksheet
       recordsWithUrls.forEach((record, index) => {
         if (record.pdfUrl) {
-          // PDF Attachment is in column H (8th column, index 7)
-          const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 7 });
+          // PDF Attachment is now in column J (10th column, index 9) because we added Marathi columns
+          const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 9 });
           
           // Create a cell object with the hyperlink
           if (!worksheet[cellAddress]) worksheet[cellAddress] = {};
           worksheet[cellAddress].l = { Target: record.pdfUrl, Tooltip: 'Click to download PDF' };
           worksheet[cellAddress].v = '🔗 Download PDF';
-          
         }
       });
 
-      // Set column widths for better readability
+      // Set column widths for better readability - Updated for Marathi columns
       const columnWidths = [
         { wch: 25 }, // From
         { wch: 25 }, // To
@@ -135,6 +136,8 @@ const EmailRecords = () => {
         { wch: 50 }, // Content
         { wch: 40 }, // Subject (Hindi)
         { wch: 50 }, // Content (Hindi)
+        { wch: 40 }, // Subject (Marathi)
+        { wch: 50 }, // Content (Marathi)
         { wch: 20 }, // PDF Attachment
         { wch: 20 }  // Created At
       ]
@@ -157,7 +160,7 @@ const EmailRecords = () => {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      showNotification('Excel file downloaded with PDF links!', 'success')
+      showNotification('Excel file downloaded with PDF links and translations!', 'success')
     } catch (error) {
       console.error('Error generating Excel:', error)
       showNotification('Failed to generate Excel file', 'error')
@@ -177,7 +180,11 @@ const EmailRecords = () => {
       record.from_user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.to_user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.content?.toLowerCase().includes(searchTerm.toLowerCase())
+      record.content?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.subject_hindi?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.content_hindi?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.subject_marathi?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.content_marathi?.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesDate = dateFilter ? 
       record.sent_date === dateFilter : true
@@ -218,7 +225,7 @@ const EmailRecords = () => {
             <input 
               type="text" 
               className="search-input" 
-              placeholder="Search emails by sender, recipient, subject, or content..." 
+              placeholder="Search emails by sender, recipient, subject, content, or translations..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
