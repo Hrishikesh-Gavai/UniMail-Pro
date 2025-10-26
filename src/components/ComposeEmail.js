@@ -3,7 +3,7 @@ import { supabase } from "../services/supabase";
 import { showNotification } from "../utils/notifications";
 
 const ComposeEmail = ({ onRecordSaved }) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL; // ✅ Vite env
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
   const [formData, setFormData] = useState({
     from: "",
