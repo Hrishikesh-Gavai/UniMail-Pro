@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { showNotification } from "../utils/notifications";
 
@@ -31,6 +31,22 @@ const ComposeEmail = ({ onRecordSaved }) => {
 
   const fileInputRef = useRef(null);
   const toInputRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+        setActiveFolder(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const emailOptions = {
     Principal: ["Principal-1@kkwagh.edu.in"],
@@ -54,7 +70,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     ],
   };
 
-  // --- Input handlers ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -101,7 +116,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     setActiveFolder(null);
   };
 
-  // --- PDF Upload ---
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -131,7 +145,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  // --- Translation Logic ---
   const translateText = async (text, type, language) => {
     if (!text.trim()) {
       showNotification('Please enter text to translate', 'warning');
@@ -144,7 +157,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }));
 
     try {
-      // Using MyMemory Translation API (free)
       const langPair = language === 'hindi' ? 'en|hi' : 'en|mr';
       const response = await fetch(
         `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
@@ -183,7 +195,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     } catch (error) {
       console.error('Translation error:', error);
       
-      // Fallback to simple transliteration if API fails
       const fallbackTranslation = simpleTransliteration(text, language);
       
       if (type === 'subject') {
@@ -212,7 +223,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  // Simple fallback transliteration function for common words
   const simpleTransliteration = (text, language) => {
     const hindiMap = {
       'hello': 'नमस्ते',
@@ -224,51 +234,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
       'request': 'अनुरोध',
       'thank you': 'धन्यवाद',
       'urgent': 'अत्यावश्यक',
-      'project': 'परियोजना',
-      'report': 'रिपोर्ट',
-      'deadline': 'अंतिम तिथि',
-      'approval': 'अनुमोदन',
-      'review': 'समीक्षा',
-      'update': 'अद्यतन',
-      'information': 'जानकारी',
-      'please': 'कृपया',
-      'kindly': 'कृपया',
-      'regards': 'शुभकामनाएं',
-      'sincerely': 'भवदीय',
-      'dear': 'प्रिय',
-      'hello': 'नमस्कार',
-      'good morning': 'शुभ प्रभात',
-      'good afternoon': 'शुभ अपराह्न',
-      'good evening': 'शुभ संध्या',
-      'welcome': 'स्वागत है',
-      'congratulations': 'बधाई हो',
-      'sorry': 'क्षमा करें',
-      'help': 'मदद',
-      'support': 'सहायता',
-      'question': 'प्रश्न',
-      'answer': 'उत्तर',
-      'problem': 'समस्या',
-      'solution': 'समाधान',
-      'team': 'टीम',
-      'company': 'कंपनी',
-      'office': 'कार्यालय',
-      'work': 'काम',
-      'job': 'नौकरी',
-      'salary': 'वेतन',
-      'invoice': 'चालान',
-      'payment': 'भुगतान',
-      'bank': 'बैंक',
-      'account': 'खाता',
-      'number': 'संख्या',
-      'date': 'तारीख',
-      'time': 'समय',
-      'day': 'दिन',
-      'week': 'सप्ताह',
-      'month': 'महीना',
-      'year': 'वर्ष',
-      'today': 'आज',
-      'tomorrow': 'कल',
-      'yesterday': 'कल'
     };
 
     const marathiMap = {
@@ -281,57 +246,11 @@ const ComposeEmail = ({ onRecordSaved }) => {
       'request': 'विनंती',
       'thank you': 'धन्यवाद',
       'urgent': 'तातडीचे',
-      'project': 'प्रकल्प',
-      'report': 'अहवाल',
-      'deadline': 'अंतिम मुदत',
-      'approval': 'मंजुरी',
-      'review': 'पुनरावलोकन',
-      'update': 'अद्ययावत',
-      'information': 'माहिती',
-      'please': 'कृपया',
-      'kindly': 'कृपया',
-      'regards': 'शुभेच्छा',
-      'sincerely': 'विनम्र',
-      'dear': 'प्रिय',
-      'hello': 'नमस्कार',
-      'good morning': 'शुभ प्रभात',
-      'good afternoon': 'शुभ दुपार',
-      'good evening': 'शुभ संध्या',
-      'welcome': 'स्वागत आहे',
-      'congratulations': 'अभिनंदन',
-      'sorry': 'माफ करा',
-      'help': 'मदत',
-      'support': 'आधार',
-      'question': 'प्रश्न',
-      'answer': 'उत्तर',
-      'problem': 'समस्या',
-      'solution': 'उपाय',
-      'team': 'संघ',
-      'company': 'कंपनी',
-      'office': 'कार्यालय',
-      'work': 'काम',
-      'job': 'नोकरी',
-      'salary': 'पगार',
-      'invoice': 'चलन',
-      'payment': 'पेमेंट',
-      'bank': 'बँक',
-      'account': 'खाते',
-      'number': 'क्रमांक',
-      'date': 'तारीख',
-      'time': 'वेळ',
-      'day': 'दिवस',
-      'week': 'आठवडा',
-      'month': 'महिना',
-      'year': 'वर्ष',
-      'today': 'आज',
-      'tomorrow': 'उद्या',
-      'yesterday': 'काल'
     };
 
     const translationMap = language === 'hindi' ? hindiMap : marathiMap;
     let translated = text;
     
-    // Replace common phrases (case insensitive)
     Object.entries(translationMap).forEach(([english, translatedWord]) => {
       const regex = new RegExp(`\\b${english}\\b`, 'gi');
       translated = translated.replace(regex, translatedWord);
@@ -340,7 +259,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     return translated !== text ? translated : `${language === 'hindi' ? 'हिंदी' : 'मराठी'} अनुवाद: ` + text;
   };
 
-  // --- Save record ---
   const saveEmailRecord = async () => {
     if (!formData.to.length) {
       showNotification("Please add at least one recipient", "error");
@@ -370,9 +288,8 @@ const ComposeEmail = ({ onRecordSaved }) => {
       const insertedRow = data[0];
       showNotification("Email record saved!", "success");
       
-      // Reset form but keep From email
       setFormData({
-        from: formData.from, // Keep the from email
+        from: formData.from,
         to: [],
         subject: "",
         content: "",
@@ -399,19 +316,16 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  // --- Open Gmail & Save ---
   const openGmailAndSave = async () => {
     if (!formData.to.length) {
       showNotification("Please add at least one recipient", "error");
       return;
     }
 
-    // Construct Gmail URL with all recipients and content including translations
     const toEmails = formData.to.join(',');
     const subject = formData.subject || '';
     let body = formData.content || '';
     
-    // Add translations to the email body
     if (formData.contentHindi || formData.contentMarathi) {
       body += '\n\n--- Translations ---\n';
       
@@ -424,16 +338,13 @@ const ComposeEmail = ({ onRecordSaved }) => {
       }
     }
     
-    // Gmail URL structure
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    // Open Gmail in new tab
     const gmailWindow = window.open(gmailUrl, '_blank');
     
     if (gmailWindow) {
       showNotification("Opening Gmail with your email content and translations...", "success");
       
-      // Save the record after a short delay
       setTimeout(async () => {
         await saveEmailRecord();
       }, 1000);
@@ -446,7 +357,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     <div className="page active">
       <h2 className="page-title">Compose Professional Email</h2>
       <div className="card">
-        {/* From - Simple manual input */}
         <div className="form-group">
           <label>From Email</label>
           <input 
@@ -459,10 +369,9 @@ const ComposeEmail = ({ onRecordSaved }) => {
           />
         </div>
 
-        {/* To - Multiple recipients with dropdown */}
         <div className="form-group">
           <label>To Recipients</label>
-          <div className="email-input-container">
+          <div className="email-input-container" ref={dropdownRef}>
             <div className="selected-emails">
               {formData.to.map((email) => (
                 <span key={email} className="email-chip">
@@ -477,7 +386,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 placeholder="Type email and press Enter, or select from dropdown..." 
                 onKeyDown={handleManualEmailInput}
                 onBlur={(e) => {
-                  // Add email when input loses focus if there's content
                   if (e.target.value.trim() && isValidEmail(e.target.value.trim())) {
                     addEmail(e.target.value.trim());
                     e.target.value = "";
@@ -493,24 +401,21 @@ const ComposeEmail = ({ onRecordSaved }) => {
               <div className="dropdown-menu">
                 {!activeFolder ? (
                   <>
-                    <div className="dropdown-title">
+                    <div className="dropdown-item" style={{ fontWeight: '600', color: 'var(--text-primary)', borderBottom: '2px solid var(--border-medium)' }}>
                       Select Recipient Group
                     </div>
                     {Object.keys(emailOptions).map((folder) => (
                       <div key={folder} className="dropdown-item folder" onClick={() => setActiveFolder(folder)}>
                         <i className="fas fa-folder"></i> {folder} 
-                        <span className="folder-count">({emailOptions[folder].length})</span>
+                        <span className="folder-count">{emailOptions[folder].length}</span>
                       </div>
                     ))}
                   </>
                 ) : (
                   <>
-                    <div className="dropdown-title">
-                      <button className="back-btn" onClick={() => setActiveFolder(null)}>
-                        <i className="fas fa-arrow-left"></i> Back
-                      </button>
-                      {activeFolder}
-                    </div>
+                    <button className="back-btn" onClick={() => setActiveFolder(null)}>
+                      <i className="fas fa-arrow-left"></i> Back to Groups
+                    </button>
                     {emailOptions[activeFolder].map((email) => (
                       <div key={email} className="dropdown-item" onClick={() => addEmail(email)}>
                         <i className="fas fa-envelope"></i> {email}
@@ -522,11 +427,10 @@ const ComposeEmail = ({ onRecordSaved }) => {
             )}
           </div>
           <div className="email-hint">
-            💡 Add multiple recipients by typing emails and pressing Enter, or select from groups above
+            Add multiple recipients by typing emails and pressing Enter, or select from groups above
           </div>
         </div>
 
-        {/* Subject with Translation Buttons */}
         <div className="form-group">
           <label>Subject</label>
           <div className="translation-controls">
@@ -561,7 +465,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
           </div>
         </div>
 
-        {/* Content with Translation Buttons */}
         <div className="form-group">
           <label>Email Content</label>
           <div className="translation-controls">
@@ -607,7 +510,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
           />
         </div>
 
-        {/* PDF Upload */}
         <div className="form-group">
           <label>Attach PDF Files</label>
           <div className="file-upload-area">
@@ -646,7 +548,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="actions">
           <button 
             type="button"
@@ -668,7 +569,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
           </button>
         </div>
 
-        {/* Translation Results */}
         {(formData.subjectHindi || formData.contentHindi || formData.subjectMarathi || formData.contentMarathi) && (
           <div className="translated-box">
             <h4>
@@ -676,7 +576,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
               Translations
             </h4>
             
-            {/* Hindi Translations */}
             {(formData.subjectHindi || formData.contentHindi) && (
               <div className="language-section">
                 <h5>Hindi</h5>
@@ -694,7 +593,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
               </div>
             )}
             
-            {/* Marathi Translations */}
             {(formData.subjectMarathi || formData.contentMarathi) && (
               <div className="language-section">
                 <h5>Marathi</h5>
