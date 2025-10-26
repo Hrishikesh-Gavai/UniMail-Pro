@@ -10,6 +10,7 @@ const EmailRecords = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState({});
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ const EmailRecords = () => {
 
   // --- Download PDF from Supabase storage ---
   const downloadPdf = async (filename) => {
+    setDownloading(prev => ({ ...prev, [filename]: true }));
     try {
       const { data, error } = await supabase.storage.from("pdfs").download(filename);
       if (error) throw error;
@@ -55,20 +57,22 @@ const EmailRecords = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showNotification("PDF downloaded!", "success");
+      showNotification("PDF downloaded successfully!", "success");
     } catch (err) {
       console.error(err);
       showNotification("Failed to download PDF", "error");
+    } finally {
+      setDownloading(prev => ({ ...prev, [filename]: false }));
     }
   };
 
   // --- Filtering ---
   const filteredRecords = emailRecords.filter((record) => {
     const searchMatch =
-      record.from_user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.to_user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.content.toLowerCase().includes(searchTerm.toLowerCase());
+      record.from_user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.to_user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.content?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const dateMatch = dateFilter
       ? new Date(record.sent_date).toISOString().split("T")[0] === dateFilter
@@ -77,7 +81,7 @@ const EmailRecords = () => {
     return searchMatch && dateMatch;
   });
 
-  if (loading)
+  if (loading) {
     return (
       <div className="page active">
         <div className="loading-screen">
@@ -86,75 +90,158 @@ const EmailRecords = () => {
         </div>
       </div>
     );
+  }
 
   return (
     <div className="page active">
-      {/* Compose Email */}
+      {/* Compose Email Section */}
       <ComposeEmail onRecordSaved={(newRecord) => setEmailRecords((prev) => [newRecord, ...prev])} />
 
-      {/* Header */}
-      <div className="records-header">
-        <h2>Email Records</h2>
-      </div>
-
-      {/* Filters */}
+      {/* Email Records Section */}
       <div className="card">
+        <div className="records-header">
+          <h2 className="page-title">Email Records</h2>
+          <div className="records-stats">
+            <span className="stat-badge">
+              Total: {emailRecords.length}
+            </span>
+            <span className="stat-badge">
+              Filtered: {filteredRecords.length}
+            </span>
+          </div>
+        </div>
+
+        {/* Filters */}
         <div className="filters">
-          <input
-            type="text"
-            placeholder="Search emails..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="search-box">
+            <i className="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              placeholder="Search emails by sender, recipient, subject, or content..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
           <input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
+            className="date-filter"
           />
+          <button 
+            onClick={loadEmailRecords}
+            className="refresh-btn"
+            title="Refresh records"
+          >
+            <i className="fas fa-sync-alt"></i>
+          </button>
         </div>
 
         {/* Records Table */}
         <div className="table-container">
-          <table className="records-table">
-            <thead>
-              <tr>
-                <th>From</th>
-                <th>To</th>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>PDF</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRecords.length === 0 ? (
+          {filteredRecords.length === 0 ? (
+            <div className="empty-state">
+              <i className="fas fa-inbox"></i>
+              <h3>No email records found</h3>
+              <p>
+                {searchTerm || dateFilter 
+                  ? "Try adjusting your search or filter criteria" 
+                  : "No emails have been composed yet. Start by composing your first email above."
+                }
+              </p>
+            </div>
+          ) : (
+            <table className="records-table">
+              <thead>
                 <tr>
-                  <td colSpan="6" style={{ textAlign: "center", padding: "2rem" }}>
-                    No email records found
-                  </td>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Subject</th>
+                  <th>Date</th>
+                  <th>Attachments</th>
+                  <th>Actions</th>
                 </tr>
-              ) : (
-                filteredRecords.map((record) => (
+              </thead>
+              <tbody>
+                {filteredRecords.map((record) => (
                   <tr key={record.id}>
-                    <td>{record.from_user}</td>
-                    <td>{record.to_user}</td>
-                    <td>{record.subject}</td>
-                    <td>{new Date(record.sent_date).toLocaleDateString()}</td>
-                    <td>{record.pdf_filename ? "✅" : "❌"}</td>
-                    <td>
-                      <button onClick={() => setSelectedEmail(record)}>View</button>
-                      {record.pdf_filename?.split(",").map((fn) => (
-                        <button key={fn} onClick={() => downloadPdf(fn.trim())}>
-                          PDF
+                    <td className="email-cell">
+                      <div className="email-address">
+                        <i className="fas fa-user"></i>
+                        {record.from_user}
+                      </div>
+                    </td>
+                    <td className="email-cell">
+                      <div className="recipients">
+                        {record.to_user?.split(',').map((email, idx) => (
+                          <span key={idx} className="recipient-email">
+                            {email}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="subject-cell">
+                      <div className="subject-text" title={record.subject}>
+                        {record.subject || "No subject"}
+                      </div>
+                    </td>
+                    <td className="date-cell">
+                      {new Date(record.sent_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </td>
+                    <td className="attachment-cell">
+                      {record.pdf_filename ? (
+                        <span className="attachment-badge">
+                          <i className="fas fa-paperclip"></i>
+                          {record.pdf_filename.split(',').length} file(s)
+                        </span>
+                      ) : (
+                        <span className="no-attachment">—</span>
+                      )}
+                    </td>
+                    <td className="actions-cell">
+                      <div className="action-buttons">
+                        <button 
+                          onClick={() => setSelectedEmail(record)}
+                          className="btn-view"
+                          title="View details"
+                        >
+                          <i className="fas fa-eye"></i>
+                          View
                         </button>
-                      ))}
+                        {record.pdf_filename && record.pdf_filename.split(',').map((filename) => (
+                          <button 
+                            key={filename}
+                            onClick={() => downloadPdf(filename.trim())}
+                            disabled={downloading[filename]}
+                            className="btn-download"
+                            title="Download PDF"
+                          >
+                            <i className="fas fa-download"></i>
+                            {downloading[filename] ? "..." : "PDF"}
+                          </button>
+                        ))}
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
+
+        {/* Pagination/Info */}
+        {filteredRecords.length > 0 && (
+          <div className="table-footer">
+            <div className="records-info">
+              Showing {filteredRecords.length} of {emailRecords.length} records
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
@@ -163,26 +250,6 @@ const EmailRecords = () => {
           <Modal email={selectedEmail} onClose={() => setSelectedEmail(null)} />
         </div>
       )}
-
-      {/* Styles */}
-      <style>{`
-        .card { padding: 1rem; border-radius: 12px; background: #fff; box-shadow: 0 8px 20px rgba(2,6,23,0.06); max-width: 1100px; margin: 1.25rem auto; }
-        .records-header { display:flex; justify-content:space-between; align-items:center; max-width:1100px; margin: 1rem auto 0; padding: 0 1rem; }
-        .records-header h2 { margin:0; }
-        .filters { display:flex; gap:0.75rem; margin-bottom: 1rem; flex-wrap:wrap; }
-        .filters input[type=text], .filters input[type=date] { padding:0.5rem 0.75rem; border-radius:8px; border:1px solid #e6eef8; }
-        .table-container { overflow-x:auto; }
-        .records-table { width:100%; border-collapse: collapse; min-width:700px; }
-        .records-table th, .records-table td { text-align:left; padding: 0.6rem 0.75rem; border-bottom: 1px solid #f1f5f9; }
-        .records-table th { background: #fbfdff; font-weight:700; }
-        .records-table button { margin-right: 6px; padding:6px 8px; border-radius:6px; border:none; background:#2563eb; color:#fff; cursor:pointer; }
-        .records-table button:disabled { opacity:0.6; cursor:not-allowed; }
-        @media (max-width:720px) {
-          .records-header { padding: 0 0.5rem; }
-          .card { margin: 0.75rem; padding: 0.85rem; }
-          .records-table { min-width: 520px; }
-        }
-      `}</style>
     </div>
   );
 };
