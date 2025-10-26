@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ComposeEmail from './components/ComposeEmail';
 import EmailRecords from './components/EmailRecords';
-import StarBackground from './components/StarBackground';
 import './App.css';
 
 function App() {
@@ -28,7 +27,6 @@ function App() {
 
   return (
     <div className="App">
-      <StarBackground />
       <Header 
         currentPage={currentPage} 
         setCurrentPage={setCurrentPage} 
