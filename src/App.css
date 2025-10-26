@@ -1,4 +1,4 @@
-/* App.css - Merged and Optimized */
+/* App.css - Complete Updated Version */
 :root {
   --primary: #00d4ff;
   --secondary: #7b2cbf;
@@ -36,6 +36,37 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* App Layout */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure pages take full height */
+.page.active {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card should grow to fill space but not push footer */
+.card {
+  flex: 1;
 }
 
 /* Background */
@@ -347,6 +378,22 @@ body {
   transform: none;
 }
 
+/* Button Variants */
+.primary-btn {
+  background: var(--gradient-primary) !important;
+  color: white !important;
+}
+
+.secondary-btn {
+  background: var(--secondary) !important;
+  color: white !important;
+}
+
+.translate-btn {
+  background: var(--accent) !important;
+  color: var(--dark-bg) !important;
+}
+
 /* Translated Box */
 .translated-box {
   margin-top: 2rem;
@@ -361,7 +408,187 @@ body {
   margin-top: 0.5rem;
 }
 
-/* Records Table */
+/* Hindi Content */
+.hindi-content {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 6px;
+  margin-top: 0.5rem;
+  font-family: inherit;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.translated-item {
+  margin-bottom: 1rem;
+}
+
+.translated-item:last-child {
+  margin-bottom: 0;
+}
+
+/* File Upload Area */
+.file-upload-area {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: var(--transition);
+}
+
+.file-upload-area:hover {
+  border-color: var(--primary);
+  background: rgba(0, 212, 255, 0.05);
+}
+
+.file-upload-btn {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.file-upload-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.file-list {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.file-list ul {
+  list-style: none;
+  margin-top: 0.5rem;
+}
+
+.file-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.file-list .fa-file-pdf {
+  color: #ff6b6b;
+}
+
+.file-size {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+
+.file-upload-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Email Input Improvements */
+.email-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.folder-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+/* Gmail Detection Styles */
+.gmail-detection-area {
+  margin-bottom: 1rem;
+}
+
+.gmail-detected {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(6, 255, 165, 0.1);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+}
+
+.gmail-email {
+  font-weight: 600;
+  flex: 1;
+}
+
+.gmail-status {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.refresh-gmail-btn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.refresh-gmail-btn:hover {
+  background: var(--accent);
+  color: var(--dark-bg);
+}
+
+.gmail-not-detected {
+  padding: 1rem;
+  background: rgba(255, 190, 11, 0.1);
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  color: var(--warning);
+}
+
+.gmail-not-detected .fab {
+  margin-right: 0.5rem;
+}
+
+.login-gmail-btn {
+  background: var(--warning);
+  color: var(--dark-bg);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0 1rem;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-gmail-btn:hover {
+  background: #e6a900;
+  transform: translateY(-1px);
+}
+
+.manual-email-input {
+  margin-top: 1rem;
+}
+
+/* Records Header */
 .records-header {
   display: flex;
   justify-content: space-between;
@@ -371,13 +598,49 @@ body {
   gap: 1rem;
 }
 
+.records-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-badge {
+  background: rgba(0, 212, 255, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Filters */
 .filters {
   display: flex;
   gap: 1rem;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
-.filters input {
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.search-input {
+  padding-left: 3rem !important;
+  width: 100%;
+}
+
+.date-filter {
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(255, 255, 255, 0.2);
@@ -385,6 +648,45 @@ body {
   color: var(--text-primary);
 }
 
+.refresh-btn {
+  background: var(--accent);
+  color: var(--dark-bg);
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+}
+
+.refresh-btn:hover {
+  transform: rotate(180deg);
+}
+
+.download-excel-btn {
+  background: #217346;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.download-excel-btn:hover {
+  background: #1a5c38;
+  transform: translateY(-2px);
+}
+
+/* Table Container */
 .table-container {
   overflow-x: auto;
 }
@@ -412,20 +714,121 @@ body {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.records-table button {
-  padding: 0.5rem 1rem;
-  background: var(--primary);
-  color: white;
+/* Table Cells */
+.email-cell .email-address {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recipients {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.recipient-email {
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.subject-cell .subject-text {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-badge {
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.no-attachment {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons button {
+  padding: 0.5rem 0.75rem;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  margin-right: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
   transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
 }
 
-.records-table button:hover {
-  background: var(--secondary);
+.btn-view {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-download {
+  background: var(--accent);
+  color: var(--dark-bg);
+}
+
+.action-buttons button:hover:not(:disabled) {
   transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.action-buttons button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+
+.empty-state .fas {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.empty-state p {
+  color: var(--text-muted);
+}
+
+/* Table Footer */
+.table-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* Modal */
@@ -537,6 +940,109 @@ body {
   }
 }
 
+/* Footer */
+.footer {
+  background: var(--dark-surface);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+  padding: 2rem 0 0 0;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.footer-section h3 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.footer-section h4 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.footer-section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.footer-section ul {
+  list-style: none;
+}
+
+.footer-section ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.footer-section ul li a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 2rem;
+  padding: 1.5rem 0;
+  text-align: center;
+}
+
+.footer-bottom p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Simple Footer Alternative */
+.simple-footer {
+  background: var(--dark-surface);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem 0;
+  margin-top: auto;
+}
+
+.simple-footer .footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.simple-footer p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
 /* Light Theme */
 [data-theme="light"] {
   --dark-bg: #f8fafc;
@@ -583,6 +1089,68 @@ body {
   background: #f8fafc;
 }
 
+[data-theme="light"] .file-upload-area {
+  border-color: #cbd5e1;
+  background: rgba(248, 250, 252, 0.5);
+}
+
+[data-theme="light"] .file-upload-area:hover {
+  border-color: var(--primary);
+  background: rgba(0, 212, 255, 0.05);
+}
+
+[data-theme="light"] .file-list li {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .recipient-email {
+  background: #f1f5f9;
+}
+
+[data-theme="light"] .hindi-content {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .gmail-detected {
+  background: rgba(6, 255, 165, 0.15);
+}
+
+[data-theme="light"] .gmail-not-detected {
+  background: rgba(255, 190, 11, 0.15);
+}
+
+[data-theme="light"] .stat-badge {
+  background: rgba(0, 212, 255, 0.15);
+}
+
+[data-theme="light"] .date-filter {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #cbd5e1;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .attachment-badge {
+  background: rgba(255, 107, 107, 0.15);
+}
+
+[data-theme="light"] .table-footer {
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .footer {
+  background: var(--dark-surface);
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .simple-footer {
+  background: var(--dark-surface);
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .footer-section ul li a:hover {
+  color: var(--primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {
@@ -626,6 +1194,37 @@ body {
   .filters {
     flex-direction: column;
   }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  
+  .footer-section {
+    padding: 0 1rem;
+  }
+  
+  .simple-footer .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .records-table {
+    min-width: 600px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Scrollbar */
@@ -642,642 +1241,6 @@ body {
   border-radius: 3px;
 }
 
-/* Add these styles to your existing App.css */
-
-/* File Upload Area */
-.file-upload-area {
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 1.5rem;
-  text-align: center;
-  transition: var(--transition);
-}
-
-.file-upload-area:hover {
-  border-color: var(--primary);
-  background: rgba(0, 212, 255, 0.05);
-}
-
-.file-upload-btn {
-  background: var(--gradient-primary);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: var(--transition);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.file-upload-btn:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.1);
-}
-
-.file-list {
-  margin-top: 1rem;
-  text-align: left;
-}
-
-.file-list ul {
-  list-style: none;
-  margin-top: 0.5rem;
-}
-
-.file-list li {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-}
-
-.file-list .fa-file-pdf {
-  color: #ff6b6b;
-}
-
-.file-size {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  margin-left: auto;
-}
-
-/* Button Variants */
-.primary-btn {
-  background: var(--gradient-primary) !important;
-  color: white !important;
-}
-
-.secondary-btn {
-  background: var(--secondary) !important;
-  color: white !important;
-}
-
-.translate-btn {
-  background: var(--accent) !important;
-  color: var(--dark-bg) !important;
-}
-
-/* Records Stats */
-.records-stats {
-  display: flex;
-  gap: 1rem;
-}
-
-.stat-badge {
-  background: rgba(0, 212, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-/* Search Box */
-.search-box {
-  position: relative;
-  flex: 1;
-  max-width: 400px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-
-.search-input {
-  padding-left: 3rem !important;
-  width: 100%;
-}
-
-/* Refresh Button */
-.refresh-btn {
-  background: var(--accent);
-  color: var(--dark-bg);
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.refresh-btn:hover {
-  transform: rotate(180deg);
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--text-muted);
-}
-
-.empty-state .fas {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin-bottom: 0.5rem;
-  color: var(--text-secondary);
-}
-
-/* Table Cells */
-.email-cell .email-address {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.recipients {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.recipient-email {
-  font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-.subject-cell .subject-text {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attachment-badge {
-  background: rgba(255, 107, 107, 0.1);
-  color: #ff6b6b;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.no-attachment {
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.action-buttons button {
-  padding: 0.5rem 0.75rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  white-space: nowrap;
-}
-
-.btn-view {
+::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
-  color: white;
 }
-
-.btn-download {
-  background: var(--accent);
-  color: var(--dark-bg);
-}
-
-.action-buttons button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-}
-
-.action-buttons button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Table Footer */
-.table-footer {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-/* Hindi Content */
-.hindi-content {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1rem;
-  border-radius: 6px;
-  margin-top: 0.5rem;
-  font-family: inherit;
-  white-space: pre-wrap;
-  line-height: 1.5;
-}
-
-.translated-item {
-  margin-bottom: 1rem;
-}
-
-.translated-item:last-child {
-  margin-bottom: 0;
-}
-
-/* Light theme adjustments */
-[data-theme="light"] .file-upload-area {
-  border-color: #cbd5e1;
-  background: rgba(248, 250, 252, 0.5);
-}
-
-[data-theme="light"] .file-upload-area:hover {
-  border-color: var(--primary);
-  background: rgba(0, 212, 255, 0.05);
-}
-
-[data-theme="light"] .file-list li {
-  background: #f8fafc;
-}
-
-[data-theme="light"] .recipient-email {
-  background: #f1f5f9;
-}
-
-[data-theme="light"] .hindi-content {
-  background: #f8fafc;
-}
-
-/* Gmail Detection Styles */
-.gmail-detection-area {
-  margin-bottom: 1rem;
-}
-
-.gmail-detected {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba(6, 255, 165, 0.1);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  color: var(--accent);
-}
-
-.gmail-email {
-  font-weight: 600;
-  flex: 1;
-}
-
-.gmail-status {
-  font-size: 0.9rem;
-  opacity: 0.8;
-}
-
-.refresh-gmail-btn {
-  background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  padding: 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.refresh-gmail-btn:hover {
-  background: var(--accent);
-  color: var(--dark-bg);
-}
-
-.gmail-not-detected {
-  padding: 1rem;
-  background: rgba(255, 190, 11, 0.1);
-  border: 1px solid var(--warning);
-  border-radius: 8px;
-  color: var(--warning);
-}
-
-.gmail-not-detected .fab {
-  margin-right: 0.5rem;
-}
-
-.login-gmail-btn {
-  background: var(--warning);
-  color: var(--dark-bg);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  margin: 0 1rem;
-  transition: var(--transition);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.login-gmail-btn:hover {
-  background: #e6a900;
-  transform: translateY(-1px);
-}
-
-.manual-email-input {
-  margin-top: 1rem;
-}
-
-/* Email Input Improvements */
-.email-hint {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-.folder-count {
-  margin-left: auto;
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
-.file-upload-hint {
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-/* Light theme adjustments */
-[data-theme="light"] .gmail-detected {
-  background: rgba(6, 255, 165, 0.15);
-}
-
-[data-theme="light"] .gmail-not-detected {
-  background: rgba(255, 190, 11, 0.15);
-}
-
-/* Records Header */
-.records-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.records-stats {
-  display: flex;
-  gap: 1rem;
-}
-
-.stat-badge {
-  background: rgba(0, 212, 255, 0.1);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-/* Filters */
-.filters {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.search-box {
-  position: relative;
-  flex: 1;
-  max-width: 400px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-}
-
-.search-input {
-  padding-left: 3rem !important;
-  width: 100%;
-}
-
-.date-filter {
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: var(--text-primary);
-}
-
-.refresh-btn {
-  background: var(--accent);
-  color: var(--dark-bg);
-  border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 45px;
-  height: 45px;
-}
-
-.refresh-btn:hover {
-  transform: rotate(180deg);
-}
-
-.download-excel-btn {
-  background: #217346;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.download-excel-btn:hover {
-  background: #1a5c38;
-  transform: translateY(-2px);
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  color: var(--text-muted);
-}
-
-.empty-state .fas {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin-bottom: 0.5rem;
-  color: var(--text-secondary);
-}
-
-.empty-state p {
-  color: var(--text-muted);
-}
-
-/* Table Cells */
-.email-cell .email-address {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.recipients {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.recipient-email {
-  font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-.subject-cell .subject-text {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attachment-badge {
-  background: rgba(255, 107, 107, 0.1);
-  color: #ff6b6b;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.no-attachment {
-  color: var(--text-muted);
-  font-style: italic;
-}
-
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.btn-view {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  white-space: nowrap;
-}
-
-.btn-download {
-  background: var(--accent);
-  color: var(--dark-bg);
-  border: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  white-space: nowrap;
-}
-
-.action-buttons button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-}
-
-.action-buttons button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Table Footer */
-.table-footer {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-/* Light theme adjustments */
-[data-theme="light"] .stat-badge {
-  background: rgba(0, 212, 255, 0.15);
-}
-
-[data-theme="light"] .date-filter {
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid #cbd5e1;
-  color: var(--text-primary);
-}
-
-[data-theme="light"] .recipient-email {
-  background: #f1f5f9;
-}
-
-[data-theme="light"] .attachment-badge {
-  background: rgba(255, 107, 107, 0.15);
-}
-
-[data-theme="light"] .table-footer {
-  border-top: 1px solid #e2e8f0;
-}
-
