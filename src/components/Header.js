@@ -1,27 +1,45 @@
 import React from 'react';
+import { Mail, Database } from 'lucide-react';
 
 const Header = ({ currentPage, setCurrentPage }) => {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLogoClick = () => {
+    setCurrentPage('compose');
+    scrollToTop();
+  };
+
   return (
     <header className="header">
       <div className="header-content">
-        <div className="logo">
-          <i className="fas fa-paper-plane"></i>
+        <a className="logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+          <Mail size={24} />
           UniMail Pro
-        </div>
+        </a>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div className="nav-tabs">
             <button 
               className={`nav-tab ${currentPage === 'compose' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('compose')}
+              onClick={() => {
+                setCurrentPage('compose');
+                scrollToTop();
+              }}
             >
-              <i className="fas fa-edit"></i> Compose
+              <Mail size={18} />
+              Compose
             </button>
             <button 
               className={`nav-tab ${currentPage === 'records' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('records')}
+              onClick={() => {
+                setCurrentPage('records');
+                scrollToTop();
+              }}
             >
-              <i className="fas fa-database"></i> Records
+              <Database size={18} />
+              Records
             </button>
           </div>
         </div>
