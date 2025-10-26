@@ -4,6 +4,7 @@ import { showNotification } from "../utils/notifications";
 
 const ComposeEmail = ({ onRecordSaved }) => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL; // ✅ Vite env
+
   const [formData, setFormData] = useState({
     from: "",
     to: [],
@@ -110,7 +111,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  // --- Translation to Hindi ---
+  // --- Translate to Hindi ---
   const translateToHindi = async () => {
     if (!formData.subject && !formData.content) {
       showNotification("Enter subject or content to translate", "warning");
@@ -138,10 +139,10 @@ const ComposeEmail = ({ onRecordSaved }) => {
         return;
       }
     } catch (err) {
-      console.warn("Translation failed, falling back:", err);
+      console.warn("Translation failed, fallback:", err);
     }
 
-    // fallback
+    // fallback transliteration
     setFormData((prev) => ({
       ...prev,
       subjectHindi: simpleTransliteration(formData.subject || ""),
@@ -176,14 +177,11 @@ const ComposeEmail = ({ onRecordSaved }) => {
             content: formData.content,
             subject_hindi: formData.subjectHindi,
             content_hindi: formData.contentHindi,
-            pdf_filename: formData.pdfFileNames.length
-              ? formData.pdfFileNames.join(",")
-              : null,
+            pdf_filename: formData.pdfFileNames.length ? formData.pdfFileNames.join(",") : null,
             sent_date: formData.sentDate,
           },
         ])
         .select();
-
       if (error) throw error;
       const insertedRow = data[0];
       showNotification("Email record saved!", "success");
@@ -202,9 +200,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
     const subject = encodeURIComponent(formData.subject || "");
     const bodyText =
       (formData.content || "") +
-      (formData.pdfFiles.length
-        ? `\n\n[Attach PDFs manually: ${formData.pdfFiles.map((f) => f.name).join(", ")}]`
-        : "");
+      (formData.pdfFiles.length ? `\n\n[Attach PDFs manually: ${formData.pdfFiles.map((f) => f.name).join(", ")}]` : "");
     const body = encodeURIComponent(bodyText);
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}&body=${body}&authuser=${encodeURIComponent(
       formData.from || "demoxiepaulo@gmail.com"
@@ -220,13 +216,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
         {/* From */}
         <div className="form-group">
           <label>From</label>
-          <input
-            type="email"
-            name="from"
-            value={formData.from}
-            onChange={handleInputChange}
-            placeholder="Sender email"
-          />
+          <input type="email" name="from" value={formData.from} onChange={handleInputChange} placeholder="Sender email" />
         </div>
 
         {/* To */}
@@ -236,72 +226,47 @@ const ComposeEmail = ({ onRecordSaved }) => {
             <div className="selected-emails">
               {formData.to.map((email) => (
                 <span key={email} className="email-chip">
-                  {email}
-                  <button type="button" onClick={() => removeEmail(email)}>×</button>
+                  {email} <button onClick={() => removeEmail(email)}>×</button>
                 </span>
               ))}
-              <input
-                type="text"
-                className="email-input"
-                placeholder="Type or select recipient..."
-                onKeyDown={handleManualEmailInput}
-              />
+              <input type="text" className="email-input" placeholder="Type or select recipient..." onKeyDown={handleManualEmailInput} />
               <button type="button" className="dropdown-btn" onClick={toggleDropdown}>▾</button>
             </div>
 
             {dropdownOpen && (
               <div className="dropdown-menu">
-                {!activeFolder ? (
-                  Object.keys(emailOptions).map((folder) => (
-                    <div key={folder} className="dropdown-item folder" onClick={() => setActiveFolder(folder)}>
-                      📁 {folder}
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    {emailOptions[activeFolder].map((email) => (
-                      <div key={email} className="dropdown-item" onClick={() => addEmail(email)}>✉ {email}</div>
-                    ))}
-                    <button className="back-btn" onClick={() => setActiveFolder(null)}>← Back</button>
-                  </>
-                )}
+                {!activeFolder
+                  ? Object.keys(emailOptions).map((folder) => (
+                      <div key={folder} className="dropdown-item folder" onClick={() => setActiveFolder(folder)}>📁 {folder}</div>
+                    ))
+                  : (
+                    <>
+                      {emailOptions[activeFolder].map((email) => (
+                        <div key={email} className="dropdown-item" onClick={() => addEmail(email)}>✉ {email}</div>
+                      ))}
+                      <button className="back-btn" onClick={() => setActiveFolder(null)}>← Back</button>
+                    </>
+                  )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Subject */}
-        <div className="form-group">
-          <label>Subject</label>
-          <input type="text" name="subject" value={formData.subject} onChange={handleInputChange} />
-        </div>
+        {/* Subject & Content */}
+        <div className="form-group"><label>Subject</label><input type="text" name="subject" value={formData.subject} onChange={handleInputChange} /></div>
+        <div className="form-group"><label>Content</label><textarea name="content" value={formData.content} onChange={handleInputChange} rows={6} /></div>
+        <div className="form-group"><label>Sent Date</label><input type="date" name="sentDate" value={formData.sentDate} onChange={handleInputChange} /></div>
 
-        {/* Content */}
-        <div className="form-group">
-          <label>Content</label>
-          <textarea name="content" value={formData.content} onChange={handleInputChange} rows={6} />
-        </div>
-
-        {/* Sent Date */}
-        <div className="form-group">
-          <label>Sent Date</label>
-          <input type="date" name="sentDate" value={formData.sentDate} onChange={handleInputChange} />
-        </div>
-
-        {/* PDFs */}
+        {/* PDF */}
         <div className="form-group">
           <label>Upload PDFs</label>
           <input ref={fileInputRef} type="file" accept=".pdf" multiple onChange={handleFileUpload} />
-          {formData.pdfFiles.length > 0 && (
-            <ul>{formData.pdfFiles.map((f, i) => <li key={i}>{f.name}</li>)}</ul>
-          )}
+          {formData.pdfFiles.length > 0 && <ul>{formData.pdfFiles.map((f, i) => <li key={i}>{f.name}</li>)}</ul>}
         </div>
 
         {/* Buttons */}
         <div className="actions">
-          <button onClick={translateToHindi} disabled={translating}>
-            {translating ? "Translating..." : "Translate to Hindi"}
-          </button>
+          <button onClick={translateToHindi} disabled={translating}>{translating ? "Translating..." : "Translate to Hindi"}</button>
           <button onClick={openGmailAndSave} disabled={loading}>Open in Gmail & Save</button>
           <button onClick={saveEmailRecord} disabled={loading}>Save Only</button>
         </div>
