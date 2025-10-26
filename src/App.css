@@ -927,3 +927,110 @@ body {
 [data-theme="light"] .hindi-content {
   background: #f8fafc;
 }
+
+/* Gmail Detection Styles */
+.gmail-detection-area {
+  margin-bottom: 1rem;
+}
+
+.gmail-detected {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(6, 255, 165, 0.1);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--accent);
+}
+
+.gmail-email {
+  font-weight: 600;
+  flex: 1;
+}
+
+.gmail-status {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.refresh-gmail-btn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.refresh-gmail-btn:hover {
+  background: var(--accent);
+  color: var(--dark-bg);
+}
+
+.gmail-not-detected {
+  padding: 1rem;
+  background: rgba(255, 190, 11, 0.1);
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  color: var(--warning);
+}
+
+.gmail-not-detected .fab {
+  margin-right: 0.5rem;
+}
+
+.login-gmail-btn {
+  background: var(--warning);
+  color: var(--dark-bg);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  margin: 0 1rem;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-gmail-btn:hover {
+  background: #e6a900;
+  transform: translateY(-1px);
+}
+
+.manual-email-input {
+  margin-top: 1rem;
+}
+
+/* Email Input Improvements */
+.email-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.folder-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.file-upload-hint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .gmail-detected {
+  background: rgba(6, 255, 165, 0.15);
+}
+
+[data-theme="light"] .gmail-not-detected {
+  background: rgba(255, 190, 11, 0.15);
+}
