@@ -3,19 +3,39 @@ import Header from './components/Header';
 import ComposeEmail from './components/ComposeEmail';
 import EmailRecords from './components/EmailRecords';
 import Footer from './components/Footer';
+import LoadingScreen from './components/LoadingScreen'; // Make sure this import is correct
 import './App.css';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('compose');
   const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   
-  // Handle page changes with loading state
+  // Simulate initial app loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoad(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   const handlePageChange = (page) => {
     setLoading(true);
     setCurrentPage(page);
-    // Simulate loading for better UX
-    setTimeout(() => setLoading(false), 300);
+    setTimeout(() => setLoading(false), 500);
   };
+
+  // Show initial loading screen
+  if (initialLoad) {
+    return (
+      <LoadingScreen 
+        type="general"
+        message="Welcome to UniMail Pro"
+        subtitle="Loading your professional email management system"
+      />
+    );
+  }
 
   return (
     <div className="App">
@@ -29,10 +49,11 @@ function App() {
       <main className="main-content">
         <div className="container">
           {loading ? (
-            <div className="loading-screen">
-              <div className="loading-spinner"></div>
-              <p>Loading...</p>
-            </div>
+            <LoadingScreen 
+              type={currentPage === 'compose' ? 'email' : 'database'}
+              message={currentPage === 'compose' ? "Loading Composer" : "Loading Records"}
+              subtitle={currentPage === 'compose' ? "Preparing email composition tools" : "Fetching your email history"}
+            />
           ) : (
             <>
               {currentPage === 'compose' && <ComposeEmail />}
