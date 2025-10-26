@@ -29,10 +29,19 @@ const Modal = ({ email, onClose }) => {
           </div>
           
           <div>
+            {/* Hindi Translations */}
             {email.subject_hindi && (
               <>
                 <h3>Subject (Hindi)</h3>
                 <p>{email.subject_hindi}</p>
+              </>
+            )}
+            
+            {/* Marathi Translations */}
+            {email.subject_marathi && (
+              <>
+                <h3>Subject (Marathi)</h3>
+                <p>{email.subject_marathi}</p>
               </>
             )}
             
@@ -45,11 +54,26 @@ const Modal = ({ email, onClose }) => {
               ))}
             </div>
             
+            {/* Hindi Content */}
             {email.content_hindi && (
               <>
                 <h3>Content (Hindi)</h3>
-                <div>
+                <div style={{ marginBottom: '1.5rem' }}>
                   {email.content_hindi.split('\n').map((line, i) => (
+                    <p key={i} style={{ margin: line ? '0.5rem 0' : '0' }}>
+                      {line || <br />}
+                    </p>
+                  ))}
+                </div>
+              </>
+            )}
+            
+            {/* Marathi Content */}
+            {email.content_marathi && (
+              <>
+                <h3>Content (Marathi)</h3>
+                <div>
+                  {email.content_marathi.split('\n').map((line, i) => (
                     <p key={i} style={{ margin: line ? '0.5rem 0' : '0' }}>
                       {line || <br />}
                     </p>
