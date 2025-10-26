@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 
 const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
   return (
@@ -15,29 +15,27 @@ const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
               className={`nav-tab ${currentPage === 'compose' ? 'active' : ''}`}
               onClick={() => setCurrentPage('compose')}
             >
-              <i className="fas fa-edit"></i> Compose Email
+              <i className="fas fa-edit"></i> Compose
             </button>
             <button 
               className={`nav-tab ${currentPage === 'records' ? 'active' : ''}`}
               onClick={() => setCurrentPage('records')}
             >
-              <i className="fas fa-database"></i> Email Records
+              <i className="fas fa-database"></i> Records
             </button>
           </div>
           
-          {/* Theme Toggle Button */}
           <button 
             className="theme-toggle"
             onClick={toggleTheme}
             aria-label="Toggle theme"
-            title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           >
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </div>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;
