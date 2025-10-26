@@ -1,17 +1,19 @@
 import React from 'react';
-import { X, Mail, User, Calendar, FileText, Languages, Paperclip, Download, ExternalLink } from 'lucide-react';
+import { X, Mail, User, Calendar, FileText, Paperclip, Download, Languages } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 const Modal = ({ email, onClose }) => {
-  if (!email) return null;
+  const [downloading, setDownloading] = React.useState(false);
 
   const downloadPdf = async (filename) => {
+    setDownloading(true);
     try {
       const { data, error } = await supabase.storage
         .from('pdfs')
         .download(filename);
-      
+
       if (error) throw error;
-      
+
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
@@ -22,197 +24,359 @@ const Modal = ({ email, onClose }) => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      showNotification('Failed to download PDF', 'error');
+      alert('Failed to download PDF');
+    } finally {
+      setDownloading(false);
     }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div className="modal-title">
-            <Mail size={28} />
-            <div>
-              <h2>Email Details</h2>
-              <p className="modal-subtitle">Complete email information and translations</p>
-            </div>
-          </div>
+      <div 
+        className="modal" 
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: '1200px',
+          maxHeight: '75  vh',
+          width: '95%',
+        }}
+      >
+        <div className="modal-header" style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+          <h2 style={{ fontSize: '1.25rem' }}>
+            <Mail size={20} />
+            Email Details
+          </h2>
           <button className="modal-close" onClick={onClose}>
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
-        
-        <div className="modal-body">
-          <div className="modal-section">
-            <h3>
-              <User size={20} />
-              Sender & Recipients
-            </h3>
-            <div className="info-grid">
-              <div className="info-item">
-                <strong>From:</strong>
-                <span>{email.from_user || "Not specified"}</span>
+
+        <div className="modal-body" style={{ 
+          padding: 'var(--space-lg)',
+          overflowY: 'auto',
+          maxHeight: 'calc(80vh - 140px)',
+        }}>
+          {/* Grid Layout for compact display */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: 'var(--space-md)',
+            marginBottom: 'var(--space-lg)',
+          }}>
+            {/* From Section */}
+            <div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '6px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+              }}>
+                <User size={14} style={{ color: 'var(--primary)' }} />
+                From
               </div>
-              <div className="info-item">
-                <strong>To:</strong>
-                <div className="recipients-list">
-                  {email.to_user?.split(',').map((recipient, index) => (
-                    <span key={index} className="recipient-tag">
-                      <Mail size={12} />
-                      {recipient}
-                    </span>
-                  ))}
-                </div>
+              <div style={{
+                padding: '10px 12px',
+                background: 'var(--gray-50)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-light)',
+                fontSize: '0.9rem',
+              }}>
+                {email.from_user || 'Not specified'}
               </div>
-              <div className="info-item">
-                <strong>
-                  <Calendar size={16} />
-                  Sent Date:
-                </strong>
-                <span>{new Date(email.sent_date).toLocaleDateString('en-US', {
-                  weekday: 'long',
+            </div>
+
+            {/* Date Section */}
+            <div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '6px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+              }}>
+                <Calendar size={14} style={{ color: 'var(--primary)' }} />
+                Sent Date
+              </div>
+              <div style={{
+                padding: '10px 12px',
+                background: 'var(--gray-50)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--border-light)',
+                fontSize: '0.9rem',
+              }}>
+                {new Date(email.sent_date).toLocaleDateString('en-US', {
                   year: 'numeric',
-                  month: 'long',
+                  month: 'short',
                   day: 'numeric'
-                })}</span>
-              </div>
-              <div className="info-item">
-                <strong>Created:</strong>
-                <span>{new Date(email.created_at).toLocaleString()}</span>
+                })}
               </div>
             </div>
           </div>
 
-          <div className="modal-section">
-            <h3>
-              <FileText size={20} />
-              Email Content
-            </h3>
-            <div className="content-section">
-              <div className="content-item">
-                <h4>Subject</h4>
-                <div className="content-text">{email.subject || "No subject"}</div>
-              </div>
-              <div className="content-item">
-                <h4>Message Content</h4>
-                <div className="content-text preformatted">
-                  {email.content.split('\n').map((line, i) => (
-                    <p key={i} style={{ margin: line ? '0.5rem 0' : '0' }}>
-                      {line || <br />}
-                    </p>
-                  ))}
-                </div>
-              </div>
+          {/* To Section - Full Width */}
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '6px',
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}>
+              <Mail size={14} style={{ color: 'var(--primary)' }} />
+              To
+            </div>
+            <div style={{
+              padding: '10px 12px',
+              background: 'var(--gray-50)',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-light)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '6px',
+            }}>
+              {email.to_user?.split(',').map((recipient, idx) => (
+                <span
+                  key={idx}
+                  style={{
+                    display: 'inline-block',
+                    padding: '3px 10px',
+                    background: 'var(--primary-ultralight)',
+                    color: 'var(--primary)',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: '0.8rem',
+                    fontWeight: '500',
+                  }}
+                >
+                  {recipient.trim()}
+                </span>
+              ))}
             </div>
           </div>
 
-          {(email.subject_hindi || email.content_hindi) && (
-            <div className="modal-section">
-              <h3>
-                <Languages size={20} />
-                Hindi Translation
-              </h3>
-              <div className="translation-section">
-                {email.subject_hindi && (
-                  <div className="translation-item">
-                    <h4>Subject (Hindi)</h4>
-                    <div className="translation-text hindi">{email.subject_hindi}</div>
+          {/* Subject Section */}
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '6px',
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}>
+              <FileText size={14} style={{ color: 'var(--primary)' }} />
+              Subject
+            </div>
+            <div style={{
+              padding: '10px 12px',
+              background: 'var(--gray-50)',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-light)',
+              fontWeight: '500',
+              fontSize: '0.95rem',
+            }}>
+              {email.subject || 'No subject'}
+            </div>
+          </div>
+
+          {/* Content Section */}
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '6px',
+              fontSize: '0.8rem',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+            }}>
+              <FileText size={14} style={{ color: 'var(--primary)' }} />
+              Content
+            </div>
+            <div style={{
+              padding: '12px',
+              background: 'var(--gray-50)',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-light)',
+              lineHeight: '1.6',
+              whiteSpace: 'pre-wrap',
+              maxHeight: '120px',
+              overflowY: 'auto',
+              fontSize: '0.9rem',
+            }}>
+              {email.content || 'No content'}
+            </div>
+          </div>
+
+          {/* Translations - Side by Side */}
+          {(email.subject_hindi || email.content_hindi || email.subject_marathi || email.content_marathi) && (
+            <div style={{
+              marginBottom: 'var(--space-md)',
+              padding: 'var(--space-md)',
+              background: 'var(--gray-50)',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-light)',
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: 'var(--space-md)',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+              }}>
+                <Languages size={16} style={{ color: 'var(--primary)' }} />
+                Translations
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: 'var(--space-md)',
+              }}>
+                {/* Hindi Translation */}
+                {(email.subject_hindi || email.content_hindi) && (
+                  <div>
+                    <h4 style={{
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                      color: 'var(--text-primary)',
+                    }}>
+                      Hindi
+                    </h4>
+                    {email.content_hindi && (
+                      <div style={{
+                        padding: '10px',
+                        background: 'var(--white)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-light)',
+                        lineHeight: '1.6',
+                        whiteSpace: 'pre-wrap',
+                        maxHeight: '100px',
+                        overflowY: 'auto',
+                        fontSize: '0.85rem',
+                      }}>
+                        {email.content_hindi}
+                      </div>
+                    )}
                   </div>
                 )}
-                {email.content_hindi && (
-                  <div className="translation-item">
-                    <h4>Content (Hindi)</h4>
-                    <div className="translation-text hindi preformatted">
-                      {email.content_hindi.split('\n').map((line, i) => (
-                        <p key={i} style={{ margin: line ? '0.5rem 0' : '0' }}>
-                          {line || <br />}
-                        </p>
-                      ))}
-                    </div>
+
+                {/* Marathi Translation */}
+                {(email.subject_marathi || email.content_marathi) && (
+                  <div>
+                    <h4 style={{
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      marginBottom: '8px',
+                      color: 'var(--text-primary)',
+                    }}>
+                      Marathi
+                    </h4>
+                    {email.content_marathi && (
+                      <div style={{
+                        padding: '10px',
+                        background: 'var(--white)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-light)',
+                        lineHeight: '1.6',
+                        whiteSpace: 'pre-wrap',
+                        maxHeight: '100px',
+                        overflowY: 'auto',
+                        fontSize: '0.85rem',
+                      }}>
+                        {email.content_marathi}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {(email.subject_marathi || email.content_marathi) && (
-            <div className="modal-section">
-              <h3>
-                <Languages size={20} />
-                Marathi Translation
-              </h3>
-              <div className="translation-section">
-                {email.subject_marathi && (
-                  <div className="translation-item">
-                    <h4>Subject (Marathi)</h4>
-                    <div className="translation-text marathi">{email.subject_marathi}</div>
-                  </div>
-                )}
-                {email.content_marathi && (
-                  <div className="translation-item">
-                    <h4>Content (Marathi)</h4>
-                    <div className="translation-text marathi preformatted">
-                      {email.content_marathi.split('\n').map((line, i) => (
-                        <p key={i} style={{ margin: line ? '0.5rem 0' : '0' }}>
-                          {line || <br />}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
+          {/* Attachments Section */}
           {email.pdf_filename && (
-            <div className="modal-section">
-              <h3>
-                <Paperclip size={20} />
+            <div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '8px',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                color: 'var(--text-primary)',
+              }}>
+                <Paperclip size={14} style={{ color: 'var(--primary)' }} />
                 Attachments
-              </h3>
-              <div className="attachments-section">
-                <div className="attachments-list">
-                  {email.pdf_filename.split(',').map((filename, index) => (
-                    <div key={index} className="attachment-item">
-                      <FileText size={18} className="file-icon" />
-                      <span className="attachment-name">{filename}</span>
-                      <button 
-                        onClick={() => downloadPdf(filename.trim())}
-                        className="btn-download-attachment"
-                        title="Download PDF"
-                      >
-                        <Download size={16} />
-                        Download
-                      </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {email.pdf_filename.split(',').map((filename, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      background: 'var(--gray-50)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-light)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <FileText size={20} style={{ color: 'var(--error)' }} />
+                      <span style={{ fontWeight: '500', fontSize: '0.85rem' }}>
+                        {filename.trim()}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => downloadPdf(filename.trim())}
+                      disabled={downloading}
+                    >
+                      {downloading ? (
+                        <div className="loading-spinner" style={{
+                          width: '14px',
+                          height: '14px',
+                          borderWidth: '2px',
+                        }}></div>
+                      ) : (
+                        <>
+                          <Download size={12} />
+                          Download
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
 
-        <div className="modal-footer">
-          <button className="btn-close-modal" onClick={onClose}>
+        <div className="modal-footer" style={{ 
+          position: 'sticky', 
+          bottom: 0, 
+          background: 'var(--gray-50)', 
+          zIndex: 10,
+          padding: 'var(--space-md) var(--space-lg)',
+        }}>
+          <button className="btn btn-secondary" onClick={onClose}>
             Close
           </button>
         </div>
       </div>
     </div>
   );
-};
-
-// Mock functions for the modal (these would be imported in a real scenario)
-const supabase = {
-  storage: {
-    from: () => ({
-      download: () => Promise.resolve({ data: null, error: null })
-    })
-  }
-};
-
-const showNotification = (message, type) => {
-  console.log(`${type}: ${message}`);
 };
 
 export default Modal;
