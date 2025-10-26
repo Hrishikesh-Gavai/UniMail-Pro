@@ -2,45 +2,47 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ComposeEmail from './components/ComposeEmail';
 import EmailRecords from './components/EmailRecords';
-import Footer from './components/Footer'; // Add this import
+import Footer from './components/Footer';
+import LoadingScreen from './components/LoadingScreen';
+import { EmailProvider } from './context/EmailContext';
 import './App.css';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('compose');
-  const [theme, setTheme] = useState('dark');
+  const [isLoading, setIsLoading] = useState(false);
   
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('unimail-theme') || 'dark';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
-  
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('unimail-theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+  const handlePageChange = (page) => {
+    setIsLoading(true);
+    setCurrentPage(page);
+    setTimeout(() => setIsLoading(false), 200);
   };
 
   return (
-    <div className="App">
-      <div className="background"></div>
-      <Header 
-        currentPage={currentPage} 
-        setCurrentPage={setCurrentPage} 
-        toggleTheme={toggleTheme}
-        theme={theme}
-      />
-      
-      <main className="main-content">
-        <div className="container">
-          {currentPage === 'compose' && <ComposeEmail />}
-          {currentPage === 'records' && <EmailRecords />}
-        </div>
-      </main>
-      
-      <Footer /> {/* Add Footer here */}
-    </div>
+    <EmailProvider>
+      <div className="App">
+        <div className="background-gradient"></div>
+        
+        <Header 
+          currentPage={currentPage} 
+          setCurrentPage={handlePageChange}
+        />
+        
+        <main className="main-content">
+          <div className="container">
+            {isLoading ? (
+              <LoadingScreen />
+            ) : (
+              <>
+                {currentPage === 'compose' && <ComposeEmail />}
+                {currentPage === 'records' && <EmailRecords />}
+              </>
+            )}
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    </EmailProvider>
   );
 }
 
