@@ -149,7 +149,7 @@ const EmailRecords = () => {
         'Subject (Marathi)': record.subject_marathi || '',
         'Content (Marathi)': record.content_marathi || '',
         'PDF Attachment': record.pdf_filename ? 'Available' : 'No Attachment',
-        'Download PDF': record.pdfUrl ? 'Download PDF' : 'No PDF',
+        'Download PDF': record.pdfUrl ? '➕Download PDF' : 'No PDF',
         'Created At': new Date(record.created_at).toLocaleString()
       }));
 
