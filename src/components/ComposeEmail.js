@@ -62,6 +62,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
   const emailOptions = {
     Principal: ["Principal-1@kkwagh.edu.in"],
     HOD: [
+      "hrishikeshgavai@gmail.com",
       "dkpatil370123@kkwagh.edu.in",
       "dapagar370123@kkwagh.edu.in",
       "dhruveshpatil7777@gmail.com",
