@@ -12,8 +12,6 @@ const Footer = () => {
   };
 
   const handleNavClick = (page) => {
-    // This would typically be handled by your router or state management
-    // For now, we'll just scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -44,12 +42,6 @@ const Footer = () => {
               <a href="#records" onClick={() => handleNavClick('records')}>
                 <Database size={16} />
                 Email Records
-              </a>
-            </li>
-            <li>
-              <a href="#help" onClick={() => scrollToSection('footer')}>
-                <HelpCircle size={16} />
-                Help & Support
               </a>
             </li>
           </ul>
@@ -94,3 +86,4 @@ const Footer = () => {
 };
 
 export default Footer;
+
