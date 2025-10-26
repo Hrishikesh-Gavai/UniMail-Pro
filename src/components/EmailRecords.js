@@ -11,24 +11,10 @@ const EmailRecords = () => {
   const [dateFilter, setDateFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState({})
-  const modalRef = useRef(null)
 
-  // Load email records on component mount
   useEffect(() => {
     loadEmailRecords()
   }, [])
-
-  // Scroll to modal when it opens
-  useEffect(() => {
-    if (selectedEmail && modalRef.current) {
-      setTimeout(() => {
-        modalRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center'
-        })
-      }, 100)
-    }
-  }, [selectedEmail])
 
   const loadEmailRecords = async () => {
     try {
@@ -56,7 +42,6 @@ const EmailRecords = () => {
       
       if (error) throw error
       
-      // Create a blob URL and trigger download
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
       a.href = url
@@ -82,7 +67,6 @@ const EmailRecords = () => {
         return
       }
 
-      // First, get public URLs for all PDFs
       const recordsWithUrls = await Promise.all(
         emailRecords.map(async (record) => {
           if (record.pdf_filename) {
@@ -95,7 +79,6 @@ const EmailRecords = () => {
         })
       );
 
-      // Prepare data for Excel - Updated to include Marathi
       const excelData = recordsWithUrls.map(record => ({
         'From': record.from_user,
         'To': record.to_user,
@@ -110,47 +93,38 @@ const EmailRecords = () => {
         'Created At': new Date(record.created_at).toLocaleString()
       }))
 
-      // Create workbook and worksheet
       const workbook = XLSX.utils.book_new()
       const worksheet = XLSX.utils.json_to_sheet(excelData)
       
-      // Add hyperlinks to the worksheet
       recordsWithUrls.forEach((record, index) => {
         if (record.pdfUrl) {
-          // PDF Attachment is now in column J (10th column, index 9) because we added Marathi columns
           const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 9 });
-          
-          // Create a cell object with the hyperlink
           if (!worksheet[cellAddress]) worksheet[cellAddress] = {};
           worksheet[cellAddress].l = { Target: record.pdfUrl, Tooltip: 'Click to download PDF' };
-          worksheet[cellAddress].v = '🔗 Download PDF';
+          worksheet[cellAddress].v = 'Download PDF';
         }
       });
 
-      // Set column widths for better readability - Updated for Marathi columns
       const columnWidths = [
-        { wch: 25 }, // From
-        { wch: 25 }, // To
-        { wch: 15 }, // Date
-        { wch: 40 }, // Subject
-        { wch: 50 }, // Content
-        { wch: 40 }, // Subject (Hindi)
-        { wch: 50 }, // Content (Hindi)
-        { wch: 40 }, // Subject (Marathi)
-        { wch: 50 }, // Content (Marathi)
-        { wch: 20 }, // PDF Attachment
-        { wch: 20 }  // Created At
+        { wch: 25 },
+        { wch: 25 },
+        { wch: 15 },
+        { wch: 40 },
+        { wch: 50 },
+        { wch: 40 },
+        { wch: 50 },
+        { wch: 40 },
+        { wch: 50 },
+        { wch: 20 },
+        { wch: 20 }
       ]
       worksheet['!cols'] = columnWidths
 
-      // Add worksheet to workbook
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Email Records')
       
-      // Generate Excel file
       const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
       const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
       
-      // Create download link
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -218,7 +192,6 @@ const EmailRecords = () => {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="filters">
           <div className="search-box">
             <i className="fas fa-search search-icon"></i>
@@ -248,7 +221,6 @@ const EmailRecords = () => {
           </button>
         </div>
 
-        {/* Records Table */}
         <div className="table-container">
           {filteredRecords.length === 0 ? (
             <div className="empty-state">
@@ -344,7 +316,6 @@ const EmailRecords = () => {
           )}
         </div>
 
-        {/* Table Footer */}
         {filteredRecords.length > 0 && (
           <div className="table-footer">
             <div className="records-info">
@@ -354,12 +325,9 @@ const EmailRecords = () => {
         )}
       </div>
 
-      {/* Modal */}
-      <div ref={modalRef}>
-        {selectedEmail && (
-          <Modal email={selectedEmail} onClose={handleCloseModal} />
-        )}
-      </div>
+      {selectedEmail && (
+        <Modal email={selectedEmail} onClose={handleCloseModal} />
+      )}
     </div>
   )
 }
