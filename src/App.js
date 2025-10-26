@@ -8,16 +8,12 @@ function App() {
   const [currentPage, setCurrentPage] = useState('compose');
   const [theme, setTheme] = useState('dark');
   
-  // Load theme from localStorage on component mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('unimail-theme');
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
+    const savedTheme = localStorage.getItem('unimail-theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);
   
-  // Toggle theme function
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
@@ -27,6 +23,7 @@ function App() {
 
   return (
     <div className="App">
+      <div className="background"></div>
       <Header 
         currentPage={currentPage} 
         setCurrentPage={setCurrentPage} 
@@ -35,13 +32,8 @@ function App() {
       />
       
       <div className="container">
-        {currentPage === 'compose' && (
-          <ComposeEmail />
-        )}
-        
-        {currentPage === 'records' && (
-          <EmailRecords />
-        )}
+        {currentPage === 'compose' && <ComposeEmail />}
+        {currentPage === 'records' && <EmailRecords />}
       </div>
     </div>
   );
