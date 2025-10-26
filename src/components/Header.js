@@ -19,28 +19,30 @@ const Header = ({ currentPage, setCurrentPage }) => {
   return (
     <header className="header">
       <div className="header-content">
-        <div className="logo" onClick={handleLogoClick}>
-          <Mail size={24} />
-          UniMail Pro
-        </div>
-        
-        <nav className="nav">
-          <div className="nav-tabs">
-            <button 
-              className={`nav-tab ${currentPage === 'compose' ? 'active' : ''}`}
-              onClick={() => handleNavClick('compose')}
-            >
-              <Mail size={18} />
-              Compose Email
-            </button>
-            <button 
-              className={`nav-tab ${currentPage === 'records' ? 'active' : ''}`}
-              onClick={() => handleNavClick('records')}
-            >
-              <Database size={18} />
-              Email Records
-            </button>
+        <div className="header-logo" onClick={handleLogoClick}>
+          <div className="logo-icon">
+            <Mail size={24} />
           </div>
+          <div className="logo-text">
+            <h1>UniMail</h1>
+          </div>
+        </div>
+
+        <nav className="header-nav">
+          <button
+            className={`nav-button ${currentPage === 'compose' ? 'active' : ''}`}
+            onClick={() => handleNavClick('compose')}
+          >
+            <Mail size={18} />
+            <span>Compose</span>
+          </button>
+          <button
+            className={`nav-button ${currentPage === 'records' ? 'active' : ''}`}
+            onClick={() => handleNavClick('records')}
+          >
+            <Database size={18} />
+            <span>Records</span>
+          </button>
         </nav>
       </div>
     </header>
