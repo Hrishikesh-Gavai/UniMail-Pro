@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
+const Header = ({ currentPage, setCurrentPage }) => {
   return (
     <header className="header">
       <div className="header-content">
@@ -24,14 +24,6 @@ const Header = ({ currentPage, setCurrentPage, toggleTheme, theme }) => {
               <i className="fas fa-database"></i> Records
             </button>
           </div>
-          
-          <button 
-            className="theme-toggle"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-          >
-            {theme === 'dark' ? '☀️' : '🌙'}
-          </button>
         </div>
       </div>
     </header>
