@@ -1,8 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { supabase } from '../services/supabase'
 import { showNotification } from '../utils/notifications'
 import Modal from './Modal'
 import * as XLSX from 'xlsx'
+import { 
+  Database, 
+  Search, 
+  Calendar, 
+  RefreshCw, 
+  Download, 
+  FileText, 
+  Eye, 
+  User, 
+  Mail, 
+  Paperclip,
+  FileDown,
+  Filter
+} from 'lucide-react'
 
 const EmailRecords = () => {
   const [emailRecords, setEmailRecords] = useState([])
@@ -181,12 +195,17 @@ const EmailRecords = () => {
     <div className="page active">
       <div className="card">
         <div className="records-header">
-          <h2 className="page-title">Email Records</h2>
+          <h2 className="page-title">
+            <Database size={32} />
+            Email Records
+          </h2>
           <div className="records-stats">
             <span className="stat-badge">
+              <Database size={16} />
               Total: {emailRecords.length}
             </span>
             <span className="stat-badge">
+              <Filter size={16} />
               Filtered: {filteredRecords.length}
             </span>
           </div>
@@ -194,7 +213,7 @@ const EmailRecords = () => {
 
         <div className="filters">
           <div className="search-box">
-            <i className="fas fa-search search-icon"></i>
+            <Search size={20} className="search-icon" />
             <input 
               type="text" 
               className="search-input" 
@@ -203,28 +222,33 @@ const EmailRecords = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <input 
-            type="date" 
-            className="date-filter" 
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          />
+          <div style={{ position: 'relative' }}>
+            <Calendar size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 1 }} />
+            <input 
+              type="date" 
+              className="date-filter"
+              style={{ paddingLeft: '2.5rem' }}
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            />
+          </div>
           <button 
             onClick={loadEmailRecords}
             className="refresh-btn"
             title="Refresh records"
           >
-            <i className="fas fa-sync-alt"></i>
+            <RefreshCw size={20} />
           </button>
           <button className="download-excel-btn" onClick={downloadExcel}>
-            <i className="fas fa-file-excel"></i> Download Excel
+            <FileDown size={20} />
+            Download Excel
           </button>
         </div>
 
         <div className="table-container">
           {filteredRecords.length === 0 ? (
             <div className="empty-state">
-              <i className="fas fa-inbox"></i>
+              <Database size={64} className="empty-icon" />
               <h3>No email records found</h3>
               <p>
                 {searchTerm || dateFilter 
@@ -237,11 +261,23 @@ const EmailRecords = () => {
             <table className="records-table">
               <thead>
                 <tr>
-                  <th>From</th>
-                  <th>To</th>
+                  <th>
+                    <User size={16} />
+                    From
+                  </th>
+                  <th>
+                    <Mail size={16} />
+                    To
+                  </th>
                   <th>Subject</th>
-                  <th>Date</th>
-                  <th>Attachments</th>
+                  <th>
+                    <Calendar size={16} />
+                    Date
+                  </th>
+                  <th>
+                    <Paperclip size={16} />
+                    Attachments
+                  </th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -250,7 +286,7 @@ const EmailRecords = () => {
                   <tr key={record.id}>
                     <td className="email-cell">
                       <div className="email-address">
-                        <i className="fas fa-user"></i>
+                        <User size={16} />
                         {record.from_user}
                       </div>
                     </td>
@@ -258,6 +294,7 @@ const EmailRecords = () => {
                       <div className="recipients">
                         {record.to_user?.split(',').map((email, idx) => (
                           <span key={idx} className="recipient-email">
+                            <Mail size={12} />
                             {email}
                           </span>
                         ))}
@@ -278,7 +315,7 @@ const EmailRecords = () => {
                     <td className="attachment-cell">
                       {record.pdf_filename ? (
                         <span className="attachment-badge">
-                          <i className="fas fa-paperclip"></i>
+                          <Paperclip size={14} />
                           {record.pdf_filename.split(',').length} file(s)
                         </span>
                       ) : (
@@ -292,7 +329,7 @@ const EmailRecords = () => {
                           className="btn-view"
                           title="View details"
                         >
-                          <i className="fas fa-eye"></i>
+                          <Eye size={16} />
                           View
                         </button>
                         {record.pdf_filename && record.pdf_filename.split(',').map((filename) => (
@@ -303,7 +340,7 @@ const EmailRecords = () => {
                             className="btn-download"
                             title="Download PDF"
                           >
-                            <i className="fas fa-download"></i>
+                            <Download size={16} />
                             {downloading[filename] ? "..." : "PDF"}
                           </button>
                         ))}
@@ -320,6 +357,17 @@ const EmailRecords = () => {
           <div className="table-footer">
             <div className="records-info">
               Showing {filteredRecords.length} of {emailRecords.length} records
+            </div>
+            <div className="records-actions">
+              <button 
+                onClick={loadEmailRecords}
+                className="refresh-btn"
+                style={{ width: 'auto', padding: '0.5rem 1rem' }}
+                title="Refresh records"
+              >
+                <RefreshCw size={16} />
+                Refresh
+              </button>
             </div>
           </div>
         )}
