@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ComposeEmail from './components/ComposeEmail';
 import EmailRecords from './components/EmailRecords';
+import Footer from './components/Footer'; // Add this import
 import './App.css';
 
 function App() {
@@ -31,10 +32,14 @@ function App() {
         theme={theme}
       />
       
-      <div className="container">
-        {currentPage === 'compose' && <ComposeEmail />}
-        {currentPage === 'records' && <EmailRecords />}
-      </div>
+      <main className="main-content">
+        <div className="container">
+          {currentPage === 'compose' && <ComposeEmail />}
+          {currentPage === 'records' && <EmailRecords />}
+        </div>
+      </main>
+      
+      <Footer /> {/* Add Footer here */}
     </div>
   );
 }
