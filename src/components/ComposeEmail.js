@@ -1,10 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { supabase } from "../services/supabase";
 import { showNotification } from "../utils/notifications";
 
 const ComposeEmail = ({ onRecordSaved }) => {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
-
   const [formData, setFormData] = useState({
     from: "",
     to: [],
@@ -14,15 +12,22 @@ const ComposeEmail = ({ onRecordSaved }) => {
     pdfFileNames: [],
     subjectHindi: "",
     contentHindi: "",
+    subjectMarathi: "",
+    contentMarathi: "",
     sentDate: new Date().toISOString().split("T")[0],
   });
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [activeFolder, setActiveFolder] = useState(null);
-  const [translating, setTranslating] = useState(false);
+  const [translating, setTranslating] = useState({ 
+    hindi: { subject: false, content: false }, 
+    marathi: { subject: false, content: false } 
+  });
   const [loading, setLoading] = useState(false);
-  const [gmailLoggedIn, setGmailLoggedIn] = useState(false);
-  const [gmailUser, setGmailUser] = useState("");
+  const [showTranslation, setShowTranslation] = useState({ 
+    hindi: { subject: false, content: false }, 
+    marathi: { subject: false, content: false } 
+  });
 
   const fileInputRef = useRef(null);
   const toInputRef = useRef(null);
@@ -47,63 +52,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
       "Dean-6@kkwagh.edu.in",
       "Dean-7@kkwagh.edu.in",
     ],
-  };
-
-  // Check if user is logged into Gmail
-  useEffect(() => {
-    checkGmailLogin();
-  }, []);
-
-  const checkGmailLogin = () => {
-    // Try to detect Gmail login status
-    const gmailCheck = document.createElement('iframe');
-    gmailCheck.src = 'https://mail.google.com/mail/u/0/';
-    gmailCheck.style.display = 'none';
-    document.body.appendChild(gmailCheck);
-
-    gmailCheck.onload = () => {
-      try {
-        // If we can access the iframe content, user might be logged in
-        const gmailDoc = gmailCheck.contentDocument || gmailCheck.contentWindow.document;
-        const userElement = gmailDoc.querySelector('[email]');
-        if (userElement) {
-          const email = userElement.getAttribute('email');
-          setGmailUser(email);
-          setFormData(prev => ({ ...prev, from: email }));
-          setGmailLoggedIn(true);
-          showNotification(`Auto-detected Gmail: ${email}`, "success");
-        } else {
-          setGmailLoggedIn(false);
-          setFormData(prev => ({ ...prev, from: "" }));
-        }
-      } catch (error) {
-        // Cross-origin restriction - use alternative method
-        detectGmailAlternative();
-      }
-      document.body.removeChild(gmailCheck);
-    };
-
-    gmailCheck.onerror = () => {
-      detectGmailAlternative();
-      document.body.removeChild(gmailCheck);
-    };
-  };
-
-  const detectGmailAlternative = () => {
-    // Alternative method: Check for Gmail cookies or localStorage
-    const hasGmailCookie = document.cookie.includes('GMAIL') || 
-                          document.cookie.includes('gmail') ||
-                          document.cookie.includes('google');
-    
-    if (hasGmailCookie) {
-      setGmailLoggedIn(true);
-      setFormData(prev => ({ ...prev, from: "your-gmail@gmail.com" }));
-      showNotification("Gmail detected. Email will be sent from your logged-in account.", "info");
-    } else {
-      setGmailLoggedIn(false);
-      setFormData(prev => ({ ...prev, from: "" }));
-      showNotification("Please log into Gmail for automatic sender detection", "warning");
-    }
   };
 
   // --- Input handlers ---
@@ -183,126 +131,213 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  // --- Translate to Hindi ---
-  const translateToHindi = async () => {
-    if (!formData.subject && !formData.content) {
-      showNotification("Enter subject or content to translate", "warning");
+  // --- Translation Logic ---
+  const translateText = async (text, type, language) => {
+    if (!text.trim()) {
+      showNotification('Please enter text to translate', 'warning');
       return;
     }
-    
-    setTranslating(true);
-    
-    try {
-      // First try your backend API
-      if (backendUrl) {
-        const resp = await fetch(`${backendUrl}/api/translate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            text: `${formData.subject}\n\n${formData.content}`.trim(), 
-            target: "hi" 
-          }),
-        });
-        
-        if (resp.ok) {
-          const data = await resp.json();
-          const parts = (data.translatedText || "").split("\n\n");
-          setFormData((prev) => ({
-            ...prev,
-            subjectHindi: parts[0] || "",
-            contentHindi: parts.slice(1).join("\n\n") || "",
-          }));
-          showNotification("Translated to Hindi successfully!", "success");
-          setTranslating(false);
-          return;
-        }
-      }
 
-      // Fallback to Google Translate API (free tier)
-      await translateWithGoogleAPI();
-      
-    } catch (err) {
-      console.error("Translation error:", err);
-      // Ultimate fallback - simple transliteration
-      setFormData((prev) => ({
-        ...prev,
-        subjectHindi: simpleTransliteration(formData.subject || ""),
-        contentHindi: simpleTransliteration(formData.content || ""),
-      }));
-      showNotification("Used fallback transliteration", "info");
-      setTranslating(false);
-    }
-  };
+    setTranslating(prev => ({ 
+      ...prev, 
+      [language]: { ...prev[language], [type]: true } 
+    }));
 
-  const translateWithGoogleAPI = async () => {
-    // Using Google Translate API (free but limited)
-    const textToTranslate = `${formData.subject}\n\n${formData.content}`.trim();
-    
     try {
-      // This is a simple approach - you might want to use a proper translation service
+      // Using MyMemory Translation API (free)
+      const langPair = language === 'hindi' ? 'en|hi' : 'en|mr';
       const response = await fetch(
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=hi&dt=t&q=${encodeURIComponent(textToTranslate)}`
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
       );
-      
-      if (response.ok) {
-        const data = await response.json();
-        const translatedText = data[0].map(item => item[0]).join('');
-        const parts = translatedText.split('\n\n');
-        
-        setFormData((prev) => ({
-          ...prev,
-          subjectHindi: parts[0] || "",
-          contentHindi: parts.slice(1).join('\n\n') || "",
-        }));
-        showNotification("Translated to Hindi using Google API!", "success");
-      } else {
-        throw new Error('Google API failed');
+
+      if (!response.ok) {
+        throw new Error('Translation API request failed');
       }
+
+      const data = await response.json();
+      
+      if (data.responseStatus !== 200) {
+        throw new Error('Translation failed: ' + data.responseDetails);
+      }
+
+      const translatedText = data.responseData.translatedText;
+
+      if (type === 'subject') {
+        setFormData(prev => ({ 
+          ...prev, 
+          [`subject${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
+        }));
+      } else {
+        setFormData(prev => ({ 
+          ...prev, 
+          [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
+        }));
+      }
+      
+      setShowTranslation(prev => ({ 
+        ...prev, 
+        [language]: { ...prev[language], [type]: true } 
+      }));
+      
+      showNotification(`${language.charAt(0).toUpperCase() + language.slice(1)} translation successful`, 'success');
     } catch (error) {
-      throw error; // Re-throw to trigger fallback
+      console.error('Translation error:', error);
+      
+      // Fallback to simple transliteration if API fails
+      const fallbackTranslation = simpleTransliteration(text, language);
+      
+      if (type === 'subject') {
+        setFormData(prev => ({ 
+          ...prev, 
+          [`subject${language.charAt(0).toUpperCase() + language.slice(1)}`]: fallbackTranslation 
+        }));
+      } else {
+        setFormData(prev => ({ 
+          ...prev, 
+          [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: fallbackTranslation 
+        }));
+      }
+      
+      setShowTranslation(prev => ({ 
+        ...prev, 
+        [language]: { ...prev[language], [type]: true } 
+      }));
+      
+      showNotification('Used fallback transliteration', 'info');
     } finally {
-      setTranslating(false);
+      setTranslating(prev => ({ 
+        ...prev, 
+        [language]: { ...prev[language], [type]: false } 
+      }));
     }
   };
 
-  const simpleTransliteration = (text) => {
-    if (!text) return "";
-    // Basic English to Hindi mapping for common words
-    const transliterationMap = {
+  // Simple fallback transliteration function for common words
+  const simpleTransliteration = (text, language) => {
+    const hindiMap = {
       'hello': 'नमस्ते',
-      'email': 'ईमेल', 
+      'email': 'ईमेल',
       'message': 'संदेश',
+      'important': 'महत्वपूर्ण',
+      'meeting': 'बैठक',
+      'document': 'दस्तावेज़',
+      'request': 'अनुरोध',
       'thank you': 'धन्यवाद',
+      'urgent': 'अत्यावश्यक',
+      'project': 'परियोजना',
+      'report': 'रिपोर्ट',
+      'deadline': 'अंतिम तिथि',
+      'approval': 'अनुमोदन',
+      'review': 'समीक्षा',
+      'update': 'अद्यतन',
+      'information': 'जानकारी',
+      'please': 'कृपया',
+      'kindly': 'कृपया',
+      'regards': 'शुभकामनाएं',
+      'sincerely': 'भवदीय',
       'dear': 'प्रिय',
-      'sir': 'महोदय',
-      'madam': 'महोदया',
-      'regards': 'सादर',
       'hello': 'नमस्कार',
       'good morning': 'शुभ प्रभात',
       'good afternoon': 'शुभ अपराह्न',
       'good evening': 'शुभ संध्या',
-      'please': 'कृपया',
-      'request': 'निवेदन',
-      'information': 'जानकारी',
-      'document': 'दस्तावेज़',
-      'important': 'महत्वपूर्ण',
-      'meeting': 'बैठक',
-      'college': 'कॉलेज',
-      'university': 'विश्वविद्यालय',
-      'student': 'छात्र',
-      'faculty': 'संकाय',
-      'department': 'विभाग'
+      'welcome': 'स्वागत है',
+      'congratulations': 'बधाई हो',
+      'sorry': 'क्षमा करें',
+      'help': 'मदद',
+      'support': 'सहायता',
+      'question': 'प्रश्न',
+      'answer': 'उत्तर',
+      'problem': 'समस्या',
+      'solution': 'समाधान',
+      'team': 'टीम',
+      'company': 'कंपनी',
+      'office': 'कार्यालय',
+      'work': 'काम',
+      'job': 'नौकरी',
+      'salary': 'वेतन',
+      'invoice': 'चालान',
+      'payment': 'भुगतान',
+      'bank': 'बैंक',
+      'account': 'खाता',
+      'number': 'संख्या',
+      'date': 'तारीख',
+      'time': 'समय',
+      'day': 'दिन',
+      'week': 'सप्ताह',
+      'month': 'महीना',
+      'year': 'वर्ष',
+      'today': 'आज',
+      'tomorrow': 'कल',
+      'yesterday': 'कल'
     };
 
+    const marathiMap = {
+      'hello': 'नमस्कार',
+      'email': 'ईमेल',
+      'message': 'संदेश',
+      'important': 'महत्वाचे',
+      'meeting': 'बैठक',
+      'document': 'दस्तऐवज',
+      'request': 'विनंती',
+      'thank you': 'धन्यवाद',
+      'urgent': 'तातडीचे',
+      'project': 'प्रकल्प',
+      'report': 'अहवाल',
+      'deadline': 'अंतिम मुदत',
+      'approval': 'मंजुरी',
+      'review': 'पुनरावलोकन',
+      'update': 'अद्ययावत',
+      'information': 'माहिती',
+      'please': 'कृपया',
+      'kindly': 'कृपया',
+      'regards': 'शुभेच्छा',
+      'sincerely': 'विनम्र',
+      'dear': 'प्रिय',
+      'hello': 'नमस्कार',
+      'good morning': 'शुभ प्रभात',
+      'good afternoon': 'शुभ दुपार',
+      'good evening': 'शुभ संध्या',
+      'welcome': 'स्वागत आहे',
+      'congratulations': 'अभिनंदन',
+      'sorry': 'माफ करा',
+      'help': 'मदत',
+      'support': 'आधार',
+      'question': 'प्रश्न',
+      'answer': 'उत्तर',
+      'problem': 'समस्या',
+      'solution': 'उपाय',
+      'team': 'संघ',
+      'company': 'कंपनी',
+      'office': 'कार्यालय',
+      'work': 'काम',
+      'job': 'नोकरी',
+      'salary': 'पगार',
+      'invoice': 'चलन',
+      'payment': 'पेमेंट',
+      'bank': 'बँक',
+      'account': 'खाते',
+      'number': 'क्रमांक',
+      'date': 'तारीख',
+      'time': 'वेळ',
+      'day': 'दिवस',
+      'week': 'आठवडा',
+      'month': 'महिना',
+      'year': 'वर्ष',
+      'today': 'आज',
+      'tomorrow': 'उद्या',
+      'yesterday': 'काल'
+    };
+
+    const translationMap = language === 'hindi' ? hindiMap : marathiMap;
     let translated = text;
     
-    // Replace common phrases
-    Object.entries(transliterationMap).forEach(([english, hindi]) => {
+    // Replace common phrases (case insensitive)
+    Object.entries(translationMap).forEach(([english, translatedWord]) => {
       const regex = new RegExp(`\\b${english}\\b`, 'gi');
-      translated = translated.replace(regex, hindi);
+      translated = translated.replace(regex, translatedWord);
     });
 
-    return translated === text ? `[Hindi Translation] ${text}` : translated;
+    return translated !== text ? translated : `${language === 'hindi' ? 'हिंदी' : 'मराठी'} अनुवाद: ` + text;
   };
 
   // --- Save record ---
@@ -324,6 +359,8 @@ const ComposeEmail = ({ onRecordSaved }) => {
             content: formData.content,
             subject_hindi: formData.subjectHindi,
             content_hindi: formData.contentHindi,
+            subject_marathi: formData.subjectMarathi,
+            content_marathi: formData.contentMarathi,
             pdf_filename: formData.pdfFileNames.length ? formData.pdfFileNames.join(",") : null,
             sent_date: formData.sentDate,
           },
@@ -343,7 +380,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
         pdfFileNames: [],
         subjectHindi: "",
         contentHindi: "",
+        subjectMarathi: "",
+        contentMarathi: "",
         sentDate: new Date().toISOString().split("T")[0],
+      });
+      
+      setShowTranslation({ 
+        hindi: { subject: false, content: false }, 
+        marathi: { subject: false, content: false } 
       });
       
       if (onRecordSaved) onRecordSaved(insertedRow);
@@ -362,19 +406,32 @@ const ComposeEmail = ({ onRecordSaved }) => {
       return;
     }
 
-    // Construct Gmail URL with all recipients and content
+    // Construct Gmail URL with all recipients and content including translations
     const toEmails = formData.to.join(',');
     const subject = formData.subject || '';
-    const body = formData.content || '';
+    let body = formData.content || '';
     
-    // Gmail URL structure that will use the logged-in user's account
+    // Add translations to the email body
+    if (formData.contentHindi || formData.contentMarathi) {
+      body += '\n\n--- Translations ---\n';
+      
+      if (formData.contentHindi) {
+        body += `\nHindi:\n${formData.contentHindi}\n`;
+      }
+      
+      if (formData.contentMarathi) {
+        body += `\nMarathi:\n${formData.contentMarathi}\n`;
+      }
+    }
+    
+    // Gmail URL structure
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     // Open Gmail in new tab
     const gmailWindow = window.open(gmailUrl, '_blank');
     
     if (gmailWindow) {
-      showNotification("Opening Gmail with your email content...", "success");
+      showNotification("Opening Gmail with your email content and translations...", "success");
       
       // Save the record after a short delay
       setTimeout(async () => {
@@ -385,60 +442,21 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  const handleLoginGmail = () => {
-    window.open('https://mail.google.com', '_blank');
-    setTimeout(() => {
-      checkGmailLogin();
-    }, 2000);
-  };
-
   return (
     <div className="page active">
       <h2 className="page-title">Compose Professional Email</h2>
       <div className="card">
-        {/* From - Auto-detected Gmail */}
+        {/* From - Simple manual input */}
         <div className="form-group">
           <label>From Email</label>
-          <div className="gmail-detection-area">
-            {gmailLoggedIn ? (
-              <div className="gmail-detected">
-                <i className="fab fa-google"></i>
-                <span className="gmail-email">{formData.from}</span>
-                <span className="gmail-status">✓ Gmail detected</span>
-                <button 
-                  type="button" 
-                  className="refresh-gmail-btn"
-                  onClick={checkGmailLogin}
-                  title="Refresh Gmail detection"
-                >
-                  <i className="fas fa-sync-alt"></i>
-                </button>
-              </div>
-            ) : (
-              <div className="gmail-not-detected">
-                <i className="fab fa-google"></i>
-                <span>Gmail not detected</span>
-                <button 
-                  type="button" 
-                  className="login-gmail-btn"
-                  onClick={handleLoginGmail}
-                >
-                  <i className="fas fa-sign-in-alt"></i>
-                  Login to Gmail
-                </button>
-                <div className="manual-email-input">
-                  <input 
-                    type="email" 
-                    name="from" 
-                    value={formData.from} 
-                    onChange={handleInputChange} 
-                    placeholder="Or enter your email manually..." 
-                    className="form-input"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          <input 
+            type="email" 
+            name="from" 
+            value={formData.from} 
+            onChange={handleInputChange} 
+            placeholder="your-email@domain.com" 
+            className="form-input"
+          />
         </div>
 
         {/* To - Multiple recipients with dropdown */}
@@ -508,29 +526,74 @@ const ComposeEmail = ({ onRecordSaved }) => {
           </div>
         </div>
 
-        {/* Subject & Content */}
+        {/* Subject with Translation Buttons */}
         <div className="form-group">
           <label>Subject</label>
-          <input 
-            type="text" 
-            name="subject" 
-            value={formData.subject} 
-            onChange={handleInputChange} 
-            placeholder="Email subject..." 
-            className="form-input"
-          />
+          <div className="translation-controls">
+            <input 
+              type="text" 
+              name="subject" 
+              value={formData.subject} 
+              onChange={handleInputChange} 
+              placeholder="Email subject..." 
+              className="form-input"
+            />
+            <div className="translation-buttons">
+              <button 
+                type="button"
+                onClick={() => translateText(formData.subject, 'subject', 'hindi')}
+                disabled={translating.hindi.subject}
+                className="translate-btn hindi-btn"
+              >
+                <i className="fas fa-language"></i>
+                {translating.hindi.subject ? "..." : "Hindi"}
+              </button>
+              <button 
+                type="button"
+                onClick={() => translateText(formData.subject, 'subject', 'marathi')}
+                disabled={translating.marathi.subject}
+                className="translate-btn marathi-btn"
+              >
+                <i className="fas fa-language"></i>
+                {translating.marathi.subject ? "..." : "Marathi"}
+              </button>
+            </div>
+          </div>
         </div>
-        
+
+        {/* Content with Translation Buttons */}
         <div className="form-group">
           <label>Email Content</label>
-          <textarea 
-            name="content" 
-            value={formData.content} 
-            onChange={handleInputChange} 
-            rows={6} 
-            placeholder="Write your email content here..."
-            className="form-textarea"
-          />
+          <div className="translation-controls">
+            <textarea 
+              name="content" 
+              value={formData.content} 
+              onChange={handleInputChange} 
+              rows={6} 
+              placeholder="Write your email content here..."
+              className="form-textarea"
+            />
+            <div className="translation-buttons">
+              <button 
+                type="button"
+                onClick={() => translateText(formData.content, 'content', 'hindi')}
+                disabled={translating.hindi.content}
+                className="translate-btn hindi-btn"
+              >
+                <i className="fas fa-language"></i>
+                {translating.hindi.content ? "..." : "Hindi"}
+              </button>
+              <button 
+                type="button"
+                onClick={() => translateText(formData.content, 'content', 'marathi')}
+                disabled={translating.marathi.content}
+                className="translate-btn marathi-btn"
+              >
+                <i className="fas fa-language"></i>
+                {translating.marathi.content ? "..." : "Marathi"}
+              </button>
+            </div>
+          </div>
         </div>
         
         <div className="form-group">
@@ -587,22 +650,12 @@ const ComposeEmail = ({ onRecordSaved }) => {
         <div className="actions">
           <button 
             type="button"
-            onClick={translateToHindi} 
-            disabled={translating}
-            className="translate-btn"
-          >
-            <i className="fas fa-language"></i>
-            {translating ? "Translating..." : "Translate to Hindi"}
-          </button>
-          <button 
-            type="button"
             onClick={openGmailAndSave} 
-            disabled={loading || !gmailLoggedIn}
+            disabled={loading}
             className="primary-btn"
-            title={!gmailLoggedIn ? "Please log into Gmail first" : "Open in Gmail and save record"}
           >
             <i className="fab fa-google"></i>
-            {gmailLoggedIn ? "Open in Gmail & Save" : "Login to Gmail First"}
+            Open in Gmail & Save
           </button>
           <button 
             type="button"
@@ -615,22 +668,47 @@ const ComposeEmail = ({ onRecordSaved }) => {
           </button>
         </div>
 
-        {/* Hindi Translation Result */}
-        {(formData.subjectHindi || formData.contentHindi) && (
+        {/* Translation Results */}
+        {(formData.subjectHindi || formData.contentHindi || formData.subjectMarathi || formData.contentMarathi) && (
           <div className="translated-box">
             <h4>
               <i className="fas fa-language"></i>
-              Hindi Translation
+              Translations
             </h4>
-            {formData.subjectHindi && (
-              <div className="translated-item">
-                <strong>Subject:</strong> {formData.subjectHindi}
+            
+            {/* Hindi Translations */}
+            {(formData.subjectHindi || formData.contentHindi) && (
+              <div className="language-section">
+                <h5>Hindi</h5>
+                {formData.subjectHindi && (
+                  <div className="translated-item">
+                    <strong>Subject:</strong> {formData.subjectHindi}
+                  </div>
+                )}
+                {formData.contentHindi && (
+                  <div className="translated-item">
+                    <strong>Content:</strong>
+                    <div className="hindi-content">{formData.contentHindi}</div>
+                  </div>
+                )}
               </div>
             )}
-            {formData.contentHindi && (
-              <div className="translated-item">
-                <strong>Content:</strong>
-                <div className="hindi-content">{formData.contentHindi}</div>
+            
+            {/* Marathi Translations */}
+            {(formData.subjectMarathi || formData.contentMarathi) && (
+              <div className="language-section">
+                <h5>Marathi</h5>
+                {formData.subjectMarathi && (
+                  <div className="translated-item">
+                    <strong>Subject:</strong> {formData.subjectMarathi}
+                  </div>
+                )}
+                {formData.contentMarathi && (
+                  <div className="translated-item">
+                    <strong>Content:</strong>
+                    <div className="marathi-content">{formData.contentMarathi}</div>
+                  </div>
+                )}
               </div>
             )}
           </div>
