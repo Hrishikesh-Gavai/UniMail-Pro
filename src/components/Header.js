@@ -11,38 +11,37 @@ const Header = ({ currentPage, setCurrentPage }) => {
     scrollToTop();
   };
 
+  const handleNavClick = (page) => {
+    setCurrentPage(page);
+    scrollToTop();
+  };
+
   return (
     <header className="header">
       <div className="header-content">
-        <a className="logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+        <div className="logo" onClick={handleLogoClick}>
           <Mail size={24} />
           UniMail Pro
-        </a>
+        </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <nav className="nav">
           <div className="nav-tabs">
             <button 
               className={`nav-tab ${currentPage === 'compose' ? 'active' : ''}`}
-              onClick={() => {
-                setCurrentPage('compose');
-                scrollToTop();
-              }}
+              onClick={() => handleNavClick('compose')}
             >
               <Mail size={18} />
-              Compose
+              Compose Email
             </button>
             <button 
               className={`nav-tab ${currentPage === 'records' ? 'active' : ''}`}
-              onClick={() => {
-                setCurrentPage('records');
-                scrollToTop();
-              }}
+              onClick={() => handleNavClick('records')}
             >
               <Database size={18} />
-              Records
+              Email Records
             </button>
           </div>
-        </div>
+        </nav>
       </div>
     </header>
   );
