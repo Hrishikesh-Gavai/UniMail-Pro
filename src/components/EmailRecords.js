@@ -1,85 +1,189 @@
-import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "../services/supabase";
-import { showNotification } from "../utils/notifications";
-import Modal from "./Modal";
-import ComposeEmail from "./ComposeEmail";
+import React, { useState, useEffect, useRef } from 'react'
+import { supabase } from '../services/supabase'
+import { showNotification } from '../utils/notifications'
+import Modal from './Modal'
+import * as XLSX from 'xlsx'
 
 const EmailRecords = () => {
-  const [emailRecords, setEmailRecords] = useState([]);
-  const [selectedEmail, setSelectedEmail] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState({});
-  const modalRef = useRef(null);
+  const [emailRecords, setEmailRecords] = useState([])
+  const [selectedEmail, setSelectedEmail] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState({})
+  const modalRef = useRef(null)
 
+  // Load email records on component mount
   useEffect(() => {
-    loadEmailRecords();
-  }, []);
+    loadEmailRecords()
+  }, [])
 
+  // Scroll to modal when it opens
   useEffect(() => {
     if (selectedEmail && modalRef.current) {
       setTimeout(() => {
-        modalRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
+        modalRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        })
+      }, 100)
     }
-  }, [selectedEmail]);
+  }, [selectedEmail])
 
-  // --- Load email records from Supabase ---
   const loadEmailRecords = async () => {
-    setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("email_records")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setEmailRecords(data || []);
-    } catch (err) {
-      console.error(err);
-      showNotification("Failed to load email records", "error");
-    } finally {
-      setLoading(false);
+        .from('email_records')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setEmailRecords(data || [])
+      setLoading(false)
+    } catch (error) {
+      console.error('Error loading records:', error)
+      showNotification('Failed to load records', 'error')
+      setLoading(false)
     }
-  };
+  }
 
-  // --- Download PDF from Supabase storage ---
   const downloadPdf = async (filename) => {
-    setDownloading(prev => ({ ...prev, [filename]: true }));
+    setDownloading(prev => ({ ...prev, [filename]: true }))
     try {
-      const { data, error } = await supabase.storage.from("pdfs").download(filename);
-      if (error) throw error;
-      const url = URL.createObjectURL(data);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showNotification("PDF downloaded successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      showNotification("Failed to download PDF", "error");
+      const { data, error } = await supabase.storage
+        .from('pdfs')
+        .download(filename)
+      
+      if (error) throw error
+      
+      // Create a blob URL and trigger download
+      const url = URL.createObjectURL(data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      showNotification('PDF downloaded successfully', 'success')
+    } catch (error) {
+      console.error('Error downloading PDF:', error)
+      showNotification('Failed to download PDF', 'error')
     } finally {
-      setDownloading(prev => ({ ...prev, [filename]: false }));
+      setDownloading(prev => ({ ...prev, [filename]: false }))
     }
-  };
+  }
 
-  // --- Filtering ---
-  const filteredRecords = emailRecords.filter((record) => {
-    const searchMatch =
+  const downloadExcel = async () => {
+    try {
+      if (emailRecords.length === 0) {
+        showNotification('No records to download', 'warning')
+        return
+      }
+
+      // First, get public URLs for all PDFs
+      const recordsWithUrls = await Promise.all(
+        emailRecords.map(async (record) => {
+          if (record.pdf_filename) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('pdfs')
+              .getPublicUrl(record.pdf_filename);
+            return { ...record, pdfUrl: publicUrl };
+          }
+          return { ...record, pdfUrl: null };
+        })
+      );
+
+      // Prepare data for Excel
+      const excelData = recordsWithUrls.map(record => ({
+        'From': record.from_user,
+        'To': record.to_user,
+        'Date': new Date(record.sent_date).toLocaleDateString(),
+        'Subject': record.subject,
+        'Content': record.content,
+        'Subject (Hindi)': record.subject_hindi || '',
+        'Content (Hindi)': record.content_hindi || '',
+        'PDF Attachment': record.pdf_filename ? 'Available' : 'No Attachment',
+        'Created At': new Date(record.created_at).toLocaleString()
+      }))
+
+      // Create workbook and worksheet
+      const workbook = XLSX.utils.book_new()
+      const worksheet = XLSX.utils.json_to_sheet(excelData)
+      
+      // Add hyperlinks to the worksheet
+      recordsWithUrls.forEach((record, index) => {
+        if (record.pdfUrl) {
+          // PDF Attachment is in column H (8th column, index 7)
+          const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 7 });
+          
+          // Create a cell object with the hyperlink
+          if (!worksheet[cellAddress]) worksheet[cellAddress] = {};
+          worksheet[cellAddress].l = { Target: record.pdfUrl, Tooltip: 'Click to download PDF' };
+          worksheet[cellAddress].v = '🔗 Download PDF';
+          
+        }
+      });
+
+      // Set column widths for better readability
+      const columnWidths = [
+        { wch: 25 }, // From
+        { wch: 25 }, // To
+        { wch: 15 }, // Date
+        { wch: 40 }, // Subject
+        { wch: 50 }, // Content
+        { wch: 40 }, // Subject (Hindi)
+        { wch: 50 }, // Content (Hindi)
+        { wch: 20 }, // PDF Attachment
+        { wch: 20 }  // Created At
+      ]
+      worksheet['!cols'] = columnWidths
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Email Records')
+      
+      // Generate Excel file
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `email-records-${new Date().toISOString().split('T')[0]}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      showNotification('Excel file downloaded with PDF links!', 'success')
+    } catch (error) {
+      console.error('Error generating Excel:', error)
+      showNotification('Failed to generate Excel file', 'error')
+    }
+  }
+
+  const handleViewClick = (record) => {
+    setSelectedEmail(record)
+  }
+
+  const handleCloseModal = () => {
+    setSelectedEmail(null)
+  }
+
+  const filteredRecords = emailRecords.filter(record => {
+    const matchesSearch = 
       record.from_user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.to_user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.content?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const dateMatch = dateFilter
-      ? new Date(record.sent_date).toISOString().split("T")[0] === dateFilter
-      : true;
-
-    return searchMatch && dateMatch;
-  });
+      record.content?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesDate = dateFilter ? 
+      record.sent_date === dateFilter : true
+    
+    return matchesSearch && matchesDate
+  })
 
   if (loading) {
     return (
@@ -89,15 +193,11 @@ const EmailRecords = () => {
           <p>Loading email records...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="page active">
-      {/* Compose Email Section */}
-      <ComposeEmail onRecordSaved={(newRecord) => setEmailRecords((prev) => [newRecord, ...prev])} />
-
-      {/* Email Records Section */}
       <div className="card">
         <div className="records-header">
           <h2 className="page-title">Email Records</h2>
@@ -115,19 +215,19 @@ const EmailRecords = () => {
         <div className="filters">
           <div className="search-box">
             <i className="fas fa-search search-icon"></i>
-            <input
-              type="text"
-              placeholder="Search emails by sender, recipient, subject, or content..."
+            <input 
+              type="text" 
+              className="search-input" 
+              placeholder="Search emails by sender, recipient, subject, or content..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
             />
           </div>
-          <input
-            type="date"
+          <input 
+            type="date" 
+            className="date-filter" 
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="date-filter"
           />
           <button 
             onClick={loadEmailRecords}
@@ -135,6 +235,9 @@ const EmailRecords = () => {
             title="Refresh records"
           >
             <i className="fas fa-sync-alt"></i>
+          </button>
+          <button className="download-excel-btn" onClick={downloadExcel}>
+            <i className="fas fa-file-excel"></i> Download Excel
           </button>
         </div>
 
@@ -147,7 +250,7 @@ const EmailRecords = () => {
               <p>
                 {searchTerm || dateFilter 
                   ? "Try adjusting your search or filter criteria" 
-                  : "No emails have been composed yet. Start by composing your first email above."
+                  : "No emails have been composed yet."
                 }
               </p>
             </div>
@@ -164,7 +267,7 @@ const EmailRecords = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRecords.map((record) => (
+                {filteredRecords.map(record => (
                   <tr key={record.id}>
                     <td className="email-cell">
                       <div className="email-address">
@@ -206,7 +309,7 @@ const EmailRecords = () => {
                     <td className="actions-cell">
                       <div className="action-buttons">
                         <button 
-                          onClick={() => setSelectedEmail(record)}
+                          onClick={() => handleViewClick(record)}
                           className="btn-view"
                           title="View details"
                         >
@@ -234,7 +337,7 @@ const EmailRecords = () => {
           )}
         </div>
 
-        {/* Pagination/Info */}
+        {/* Table Footer */}
         {filteredRecords.length > 0 && (
           <div className="table-footer">
             <div className="records-info">
@@ -245,13 +348,13 @@ const EmailRecords = () => {
       </div>
 
       {/* Modal */}
-      {selectedEmail && (
-        <div ref={modalRef}>
-          <Modal email={selectedEmail} onClose={() => setSelectedEmail(null)} />
-        </div>
-      )}
+      <div ref={modalRef}>
+        {selectedEmail && (
+          <Modal email={selectedEmail} onClose={handleCloseModal} />
+        )}
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default EmailRecords;
+export default EmailRecords
