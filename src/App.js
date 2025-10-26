@@ -5,16 +5,16 @@ import Footer from './components/Footer';
 import ComposeEmail from './components/ComposeEmail';
 import EmailRecords from './components/EmailRecords';
 import LoadingScreen from './components/LoadingScreen';
+import { Toaster } from 'react-hot-toast';  // ADD THIS
 
 function App() {
   const [currentPage, setCurrentPage] = useState('compose');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial app loading
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1500); // Show loading for 1.5 seconds
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -23,13 +23,14 @@ function App() {
     setCurrentPage(page);
   };
 
-  // Show loading screen on initial load
   if (loading) {
     return <LoadingScreen />;
   }
 
   return (
     <div className="App">
+      <Toaster position="top-right" />  {/* ADD THIS */}
+      
       <Header currentPage={currentPage} setCurrentPage={handlePageChange} />
       
       <main className="main-content">
