@@ -1,6 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { showNotification } from "../utils/notifications";
+import { 
+  Mail, 
+  Send, 
+  Save, 
+  Upload, 
+  FileText, 
+  ChevronDown, 
+  Folder, 
+  ArrowLeft, 
+  X,
+  Languages,
+  User,
+  Calendar
+} from 'lucide-react';
 
 const ComposeEmail = ({ onRecordSaved }) => {
   const [formData, setFormData] = useState({
@@ -24,10 +38,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
     marathi: { subject: false, content: false } 
   });
   const [loading, setLoading] = useState(false);
-  const [showTranslation, setShowTranslation] = useState({ 
-    hindi: { subject: false, content: false }, 
-    marathi: { subject: false, content: false } 
-  });
+  const [dragOver, setDragOver] = useState(false);
 
   const fileInputRef = useRef(null);
   const toInputRef = useRef(null);
@@ -116,8 +127,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
     setActiveFolder(null);
   };
 
-  const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files);
+  const handleFileUpload = async (files) => {
     if (!files.length) return;
 
     for (let file of files) {
@@ -143,6 +153,26 @@ const ComposeEmail = ({ onRecordSaved }) => {
         showNotification(`Failed to upload: ${file.name}`, "error");
       }
     }
+  };
+
+  const handleFileInputChange = (e) => {
+    handleFileUpload(Array.from(e.target.files));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    handleFileUpload(Array.from(e.dataTransfer.files));
   };
 
   const translateText = async (text, type, language) => {
@@ -186,11 +216,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
         }));
       }
       
-      setShowTranslation(prev => ({ 
-        ...prev, 
-        [language]: { ...prev[language], [type]: true } 
-      }));
-      
       showNotification(`${language.charAt(0).toUpperCase() + language.slice(1)} translation successful`, 'success');
     } catch (error) {
       console.error('Translation error:', error);
@@ -208,11 +233,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
           [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: fallbackTranslation 
         }));
       }
-      
-      setShowTranslation(prev => ({ 
-        ...prev, 
-        [language]: { ...prev[language], [type]: true } 
-      }));
       
       showNotification('Used fallback transliteration', 'info');
     } finally {
@@ -302,11 +322,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
         sentDate: new Date().toISOString().split("T")[0],
       });
       
-      setShowTranslation({ 
-        hindi: { subject: false, content: false }, 
-        marathi: { subject: false, content: false } 
-      });
-      
       if (onRecordSaved) onRecordSaved(insertedRow);
     } catch (err) {
       console.error("Error saving email record:", err);
@@ -355,10 +370,16 @@ const ComposeEmail = ({ onRecordSaved }) => {
 
   return (
     <div className="page active">
-      <h2 className="page-title">Compose Professional Email</h2>
+      <h2 className="page-title">
+        <Mail size={32} />
+        Compose Professional Email
+      </h2>
       <div className="card">
         <div className="form-group">
-          <label>From Email</label>
+          <label>
+            <User size={18} />
+            From Email
+          </label>
           <input 
             type="email" 
             name="from" 
@@ -370,13 +391,18 @@ const ComposeEmail = ({ onRecordSaved }) => {
         </div>
 
         <div className="form-group">
-          <label>To Recipients</label>
+          <label>
+            <Mail size={18} />
+            To Recipients
+          </label>
           <div className="email-input-container" ref={dropdownRef}>
             <div className="selected-emails">
               {formData.to.map((email) => (
                 <span key={email} className="email-chip">
                   {email} 
-                  <button type="button" onClick={() => removeEmail(email)}>×</button>
+                  <button type="button" onClick={() => removeEmail(email)}>
+                    <X size={14} />
+                  </button>
                 </span>
               ))}
               <input 
@@ -393,7 +419,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 }}
               />
               <button type="button" className="dropdown-btn" onClick={toggleDropdown}>
-                <i className="fas fa-chevron-down"></i>
+                <ChevronDown size={20} />
               </button>
             </div>
 
@@ -406,7 +432,8 @@ const ComposeEmail = ({ onRecordSaved }) => {
                     </div>
                     {Object.keys(emailOptions).map((folder) => (
                       <div key={folder} className="dropdown-item folder" onClick={() => setActiveFolder(folder)}>
-                        <i className="fas fa-folder"></i> {folder} 
+                        <Folder size={16} />
+                        {folder} 
                         <span className="folder-count">{emailOptions[folder].length}</span>
                       </div>
                     ))}
@@ -414,11 +441,13 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 ) : (
                   <>
                     <button className="back-btn" onClick={() => setActiveFolder(null)}>
-                      <i className="fas fa-arrow-left"></i> Back to Groups
+                      <ArrowLeft size={16} />
+                      Back to Groups
                     </button>
                     {emailOptions[activeFolder].map((email) => (
                       <div key={email} className="dropdown-item" onClick={() => addEmail(email)}>
-                        <i className="fas fa-envelope"></i> {email}
+                        <Mail size={16} />
+                        {email}
                       </div>
                     ))}
                   </>
@@ -427,6 +456,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
             )}
           </div>
           <div className="email-hint">
+            <Info size={16} />
             Add multiple recipients by typing emails and pressing Enter, or select from groups above
           </div>
         </div>
@@ -446,20 +476,20 @@ const ComposeEmail = ({ onRecordSaved }) => {
               <button 
                 type="button"
                 onClick={() => translateText(formData.subject, 'subject', 'hindi')}
-                disabled={translating.hindi.subject}
+                disabled={translating.hindi.subject || !formData.subject.trim()}
                 className="translate-btn hindi-btn"
               >
-                <i className="fas fa-language"></i>
-                {translating.hindi.subject ? "..." : "Hindi"}
+                <Languages size={16} />
+                {translating.hindi.subject ? "Translating..." : "Hindi"}
               </button>
               <button 
                 type="button"
                 onClick={() => translateText(formData.subject, 'subject', 'marathi')}
-                disabled={translating.marathi.subject}
+                disabled={translating.marathi.subject || !formData.subject.trim()}
                 className="translate-btn marathi-btn"
               >
-                <i className="fas fa-language"></i>
-                {translating.marathi.subject ? "..." : "Marathi"}
+                <Languages size={16} />
+                {translating.marathi.subject ? "Translating..." : "Marathi"}
               </button>
             </div>
           </div>
@@ -480,27 +510,30 @@ const ComposeEmail = ({ onRecordSaved }) => {
               <button 
                 type="button"
                 onClick={() => translateText(formData.content, 'content', 'hindi')}
-                disabled={translating.hindi.content}
+                disabled={translating.hindi.content || !formData.content.trim()}
                 className="translate-btn hindi-btn"
               >
-                <i className="fas fa-language"></i>
-                {translating.hindi.content ? "..." : "Hindi"}
+                <Languages size={16} />
+                {translating.hindi.content ? "Translating..." : "Hindi"}
               </button>
               <button 
                 type="button"
                 onClick={() => translateText(formData.content, 'content', 'marathi')}
-                disabled={translating.marathi.content}
+                disabled={translating.marathi.content || !formData.content.trim()}
                 className="translate-btn marathi-btn"
               >
-                <i className="fas fa-language"></i>
-                {translating.marathi.content ? "..." : "Marathi"}
+                <Languages size={16} />
+                {translating.marathi.content ? "Translating..." : "Marathi"}
               </button>
             </div>
           </div>
         </div>
         
         <div className="form-group">
-          <label>Sent Date</label>
+          <label>
+            <Calendar size={18} />
+            Sent Date
+          </label>
           <input 
             type="date" 
             name="sentDate" 
@@ -511,14 +544,22 @@ const ComposeEmail = ({ onRecordSaved }) => {
         </div>
 
         <div className="form-group">
-          <label>Attach PDF Files</label>
-          <div className="file-upload-area">
+          <label>
+            <FileText size={18} />
+            Attach PDF Files
+          </label>
+          <div 
+            className={`file-upload-area ${dragOver ? 'drag-over' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <input 
               ref={fileInputRef} 
               type="file" 
               accept=".pdf" 
               multiple 
-              onChange={handleFileUpload} 
+              onChange={handleFileInputChange} 
               style={{ display: 'none' }}
             />
             <button 
@@ -526,11 +567,11 @@ const ComposeEmail = ({ onRecordSaved }) => {
               className="file-upload-btn"
               onClick={() => fileInputRef.current?.click()}
             >
-              <i className="fas fa-cloud-upload-alt"></i>
+              <Upload size={20} />
               Choose PDF Files
             </button>
             <div className="file-upload-hint">
-              Maximum 40MB per file. You'll need to attach these manually in Gmail.
+              Maximum 40MB per file. Drag and drop files here or click to browse. You'll need to attach these manually in Gmail.
             </div>
             {formData.pdfFiles.length > 0 && (
               <div className="file-list">
@@ -538,7 +579,8 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 <ul>
                   {formData.pdfFiles.map((f, i) => (
                     <li key={i}>
-                      <i className="fas fa-file-pdf"></i> {f.name} 
+                      <FileText size={18} className="file-icon" />
+                      {f.name} 
                       <span className="file-size">({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
                     </li>
                   ))}
@@ -552,33 +594,36 @@ const ComposeEmail = ({ onRecordSaved }) => {
           <button 
             type="button"
             onClick={openGmailAndSave} 
-            disabled={loading}
+            disabled={loading || !formData.to.length}
             className="primary-btn"
           >
-            <i className="fab fa-google"></i>
-            Open in Gmail & Save
+            <Send size={20} />
+            {loading ? "Saving..." : "Open in Gmail & Save"}
           </button>
           <button 
             type="button"
             onClick={saveEmailRecord} 
-            disabled={loading}
+            disabled={loading || !formData.to.length}
             className="secondary-btn"
           >
-            <i className="fas fa-save"></i>
-            Save Only
+            <Save size={20} />
+            {loading ? "Saving..." : "Save Only"}
           </button>
         </div>
 
         {(formData.subjectHindi || formData.contentHindi || formData.subjectMarathi || formData.contentMarathi) && (
           <div className="translated-box">
             <h4>
-              <i className="fas fa-language"></i>
+              <Languages size={24} />
               Translations
             </h4>
             
             {(formData.subjectHindi || formData.contentHindi) && (
               <div className="language-section">
-                <h5>Hindi</h5>
+                <h5>
+                  <Languages size={18} />
+                  Hindi
+                </h5>
                 {formData.subjectHindi && (
                   <div className="translated-item">
                     <strong>Subject:</strong> {formData.subjectHindi}
@@ -595,7 +640,10 @@ const ComposeEmail = ({ onRecordSaved }) => {
             
             {(formData.subjectMarathi || formData.contentMarathi) && (
               <div className="language-section">
-                <h5>Marathi</h5>
+                <h5>
+                  <Languages size={18} />
+                  Marathi
+                </h5>
                 {formData.subjectMarathi && (
                   <div className="translated-item">
                     <strong>Subject:</strong> {formData.subjectMarathi}
@@ -615,5 +663,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
     </div>
   );
 };
+
+// Add missing Info icon component
+const Info = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="16" x2="12" y2="12"></line>
+    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+  </svg>
+);
 
 export default ComposeEmail;
