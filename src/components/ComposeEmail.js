@@ -1,22 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../services/supabase";
-import { showNotification } from "../utils/notifications";
+import { showNotification, showPromiseNotification } from "../utils/notifications";
+import { InlineLoading } from "./LoadingScreen"; // Add this import
 import { 
-  Mail, 
-  Send, 
-  Save, 
-  Upload, 
-  FileText, 
-  ChevronDown, 
-  Folder, 
-  ArrowLeft, 
-  X,
-  Languages,
-  User,
-  Calendar,
-  Info,
-  Plus,
-  Trash2
+  Mail, Send, Save, Upload, FileText, ChevronDown, Folder, 
+  ArrowLeft, X, Languages, User, Calendar, Info, Trash2 
 } from 'lucide-react';
 
 const ComposeEmail = ({ onRecordSaved }) => {
@@ -48,30 +36,20 @@ const ComposeEmail = ({ onRecordSaved }) => {
   const toInputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Email options organized by department
+  // Email options
   const emailOptions = {
     "Administration": {
       "Principal": ["Principal-1@kkwagh.edu.in"],
       "Dean": [
-        "Dean-1@kkwagh.edu.in",
-        "Dean-2@kkwagh.edu.in",
-        "Dean-3@kkwagh.edu.in",
-        "Dean-4@kkwagh.edu.in",
-        "Dean-5@kkwagh.edu.in",
-        "Dean-6@kkwagh.edu.in",
-        "Dean-7@kkwagh.edu.in",
+        "Dean-1@kkwagh.edu.in", "Dean-2@kkwagh.edu.in", "Dean-3@kkwagh.edu.in",
+        "Dean-4@kkwagh.edu.in", "Dean-5@kkwagh.edu.in", "Dean-6@kkwagh.edu.in", "Dean-7@kkwagh.edu.in",
       ]
     },
     "Department Heads": {
       "HOD": [
-        "hrishikeshgavai@gmail.com",
-        "dkpatil370123@kkwagh.edu.in",
-        "dapagar370123@kkwagh.edu.in",
-        "dhruveshpatil7777@gmail.com",
-        "nakshatrarao48@gmail.com",
-        "pmlokwani370123@kkwagh.edu.in",
-        "hagavai370123@kkwagh.edu.in",
-        "ranjit.pawar5142@gmail.com",
+        "hrishikeshgavai@gmail.com", "dkpatil370123@kkwagh.edu.in", "dapagar370123@kkwagh.edu.in",
+        "dhruveshpatil7777@gmail.com", "nakshatrarao48@gmail.com", "pmlokwani370123@kkwagh.edu.in",
+        "hagavai370123@kkwagh.edu.in", "ranjit.pawar5142@gmail.com",
       ]
     }
   };
@@ -137,10 +115,12 @@ const ComposeEmail = ({ onRecordSaved }) => {
       ...prev,
       to: prev.to.filter((e) => e !== email),
     }));
+    showNotification(`Removed ${email}`, "info");
   };
 
   const clearAllEmails = () => {
     setFormData((prev) => ({ ...prev, to: [] }));
+    showNotification("All recipients cleared", "info");
   };
 
   const toggleDropdown = () => {
@@ -163,37 +143,49 @@ const ComposeEmail = ({ onRecordSaved }) => {
       return true;
     });
 
-    for (let file of validFiles) {
-      try {
-        const fileName = `${Date.now()}-${file.name}`;
-        const { error } = await supabase.storage.from("pdfs").upload(fileName, file);
-        if (error) throw error;
+    // Use promise notification for file uploads
+    showPromiseNotification(
+      Promise.all(
+        validFiles.map(async (file) => {
+          try {
+            const fileName = `${Date.now()}-${file.name}`;
+            const { error } = await supabase.storage.from("pdfs").upload(fileName, file);
+            if (error) throw error;
 
-        setFormData((prev) => ({
-          ...prev,
-          pdfFiles: [...prev.pdfFiles, file],
-          pdfFileNames: [...prev.pdfFileNames, fileName],
-        }));
+            setFormData((prev) => ({
+              ...prev,
+              pdfFiles: [...prev.pdfFiles, file],
+              pdfFileNames: [...prev.pdfFileNames, fileName],
+            }));
 
-        showNotification(`Uploaded: ${file.name}`, "success");
-      } catch (err) {
-        console.error("PDF upload error:", err);
-        showNotification(`Failed to upload: ${file.name}`, "error");
+            return fileName;
+          } catch (err) {
+            console.error("PDF upload error:", err);
+            throw new Error(`Failed to upload: ${file.name}`);
+          }
+        })
+      ),
+      {
+        loading: `Uploading ${validFiles.length} file(s)...`,
+        success: `Successfully uploaded ${validFiles.length} file(s)`,
+        error: 'Some files failed to upload'
       }
-    }
+    );
   };
 
   const handleFileInputChange = (e) => {
     handleFileUpload(Array.from(e.target.files));
-    e.target.value = ''; // Reset input
+    e.target.value = '';
   };
 
   const removeFile = (index) => {
+    const fileName = formData.pdfFiles[index].name;
     setFormData(prev => ({
       ...prev,
       pdfFiles: prev.pdfFiles.filter((_, i) => i !== index),
       pdfFileNames: prev.pdfFileNames.filter((_, i) => i !== index)
     }));
+    showNotification(`Removed ${fileName}`, "info");
   };
 
   const handleDragOver = (e) => {
@@ -218,51 +210,61 @@ const ComposeEmail = ({ onRecordSaved }) => {
       return;
     }
 
-    setTranslating(prev => ({ 
-      ...prev, 
-      [language]: { ...prev[language], [type]: true } 
-    }));
-
-    try {
-      const langPair = language === 'hindi' ? 'en|hi' : 'en|mr';
-      const response = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
-      );
-
-      if (!response.ok) {
-        throw new Error('Translation API request failed');
-      }
-
-      const data = await response.json();
-      
-      if (data.responseStatus !== 200) {
-        throw new Error('Translation failed: ' + data.responseDetails);
-      }
-
-      const translatedText = data.responseData.translatedText;
-
-      if (type === 'subject') {
-        setFormData(prev => ({ 
+    // Use promise notification for translation
+    showPromiseNotification(
+      new Promise(async (resolve, reject) => {
+        setTranslating(prev => ({ 
           ...prev, 
-          [`subject${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
+          [language]: { ...prev[language], [type]: true } 
         }));
-      } else {
-        setFormData(prev => ({ 
-          ...prev, 
-          [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
-        }));
+
+        try {
+          const langPair = language === 'hindi' ? 'en|hi' : 'en|mr';
+          const response = await fetch(
+            `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
+          );
+
+          if (!response.ok) {
+            throw new Error('Translation API request failed');
+          }
+
+          const data = await response.json();
+          
+          if (data.responseStatus !== 200) {
+            throw new Error('Translation failed: ' + data.responseDetails);
+          }
+
+          const translatedText = data.responseData.translatedText;
+
+          if (type === 'subject') {
+            setFormData(prev => ({ 
+              ...prev, 
+              [`subject${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
+            }));
+          } else {
+            setFormData(prev => ({ 
+              ...prev, 
+              [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText 
+            }));
+          }
+          
+          resolve(translatedText);
+        } catch (error) {
+          console.error('Translation error:', error);
+          reject(error);
+        } finally {
+          setTranslating(prev => ({ 
+            ...prev, 
+            [language]: { ...prev[language], [type]: false } 
+          }));
+        }
+      }),
+      {
+        loading: `Translating to ${language}...`,
+        success: `${language.charAt(0).toUpperCase() + language.slice(1)} translation completed`,
+        error: 'Translation failed. Please try again.'
       }
-      
-      showNotification(`${language.charAt(0).toUpperCase() + language.slice(1)} translation completed`, 'success');
-    } catch (error) {
-      console.error('Translation error:', error);
-      showNotification('Translation service unavailable. Please try again later.', 'error');
-    } finally {
-      setTranslating(prev => ({ 
-        ...prev, 
-        [language]: { ...prev[language], [type]: false } 
-      }));
-    }
+    );
   };
 
   const saveEmailRecord = async () => {
@@ -335,42 +337,55 @@ const ComposeEmail = ({ onRecordSaved }) => {
       return;
     }
 
-    const toEmails = formData.to.join(',');
-    const subject = formData.subject || '';
-    let body = formData.content || '';
-    
-    // Add translations to email body
-    if (formData.contentHindi || formData.contentMarathi) {
-      body += '\n\n--- Translations ---\n';
-      
-      if (formData.contentHindi) {
-        body += `\nHindi:\n${formData.contentHindi}\n`;
-      }
-      
-      if (formData.contentMarathi) {
-        body += `\nMarathi:\n${formData.contentMarathi}\n`;
-      }
-    }
-    
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Use promise notification for the entire process
+    showPromiseNotification(
+      new Promise(async (resolve, reject) => {
+        try {
+          const toEmails = formData.to.join(',');
+          const subject = formData.subject || '';
+          let body = formData.content || '';
+          
+          // Add translations to email body
+          if (formData.contentHindi || formData.contentMarathi) {
+            body += '\n\n--- Translations ---\n';
+            
+            if (formData.contentHindi) {
+              body += `\nHindi:\n${formData.contentHindi}\n`;
+            }
+            
+            if (formData.contentMarathi) {
+              body += `\nMarathi:\n${formData.contentMarathi}\n`;
+            }
+          }
+          
+          const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    const gmailWindow = window.open(gmailUrl, '_blank');
-    
-    if (gmailWindow) {
-      showNotification("Opening Gmail with your email content...", "success");
-      
-      // Auto-save after a short delay
-      setTimeout(async () => {
-        await saveEmailRecord();
-      }, 1000);
-    } else {
-      showNotification("Please allow popups for Gmail to open", "error");
-    }
+          const gmailWindow = window.open(gmailUrl, '_blank');
+          
+          if (gmailWindow) {
+            // Auto-save after a short delay
+            setTimeout(async () => {
+              await saveEmailRecord();
+              resolve();
+            }, 1000);
+          } else {
+            throw new Error('Please allow popups for Gmail to open');
+          }
+        } catch (error) {
+          reject(error);
+        }
+      }),
+      {
+        loading: 'Opening Gmail and saving record...',
+        success: 'Gmail opened successfully! Email record saved.',
+        error: 'Failed to open Gmail. Please check popup settings.'
+      }
+    );
   };
 
   const clearForm = () => {
     setFormData({
-      from: formData.from, // Keep sender email
+      from: formData.from,
       to: [],
       subject: "",
       content: "",
@@ -534,8 +549,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 className="translate-btn hindi-btn"
                 title="Translate to Hindi"
               >
-                <Languages size={16} />
-                {translating.hindi.subject ? "Translating..." : "Hindi"}
+                {translating.hindi.subject ? (
+                  <InlineLoading size="small" text="Translating..." />
+                ) : (
+                  <>
+                    <Languages size={16} />
+                    Hindi
+                  </>
+                )}
               </button>
               <button 
                 type="button"
@@ -544,8 +565,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 className="translate-btn marathi-btn"
                 title="Translate to Marathi"
               >
-                <Languages size={16} />
-                {translating.marathi.subject ? "Translating..." : "Marathi"}
+                {translating.marathi.subject ? (
+                  <InlineLoading size="small" text="Translating..." />
+                ) : (
+                  <>
+                    <Languages size={16} />
+                    Marathi
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -570,8 +597,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 className="translate-btn hindi-btn"
                 title="Translate to Hindi"
               >
-                <Languages size={16} />
-                {translating.hindi.content ? "Translating..." : "Hindi"}
+                {translating.hindi.content ? (
+                  <InlineLoading size="small" text="Translating..." />
+                ) : (
+                  <>
+                    <Languages size={16} />
+                    Hindi
+                  </>
+                )}
               </button>
               <button 
                 type="button"
@@ -580,8 +613,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
                 className="translate-btn marathi-btn"
                 title="Translate to Marathi"
               >
-                <Languages size={16} />
-                {translating.marathi.content ? "Translating..." : "Marathi"}
+                {translating.marathi.content ? (
+                  <InlineLoading size="small" text="Translating..." />
+                ) : (
+                  <>
+                    <Languages size={16} />
+                    Marathi
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -669,8 +708,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
             disabled={loading || !formData.to.length || !formData.subject.trim()}
             className="primary-btn"
           >
-            <Send size={20} />
-            {loading ? "Saving..." : "Open in Gmail & Save"}
+            {loading ? (
+              <InlineLoading size="medium" text="Processing..." />
+            ) : (
+              <>
+                <Send size={20} />
+                Open in Gmail & Save
+              </>
+            )}
           </button>
           <button 
             type="button"
@@ -678,8 +723,14 @@ const ComposeEmail = ({ onRecordSaved }) => {
             disabled={loading || !formData.to.length || !formData.subject.trim()}
             className="secondary-btn"
           >
-            <Save size={20} />
-            {loading ? "Saving..." : "Save Record Only"}
+            {loading ? (
+              <InlineLoading size="medium" text="Saving..." />
+            ) : (
+              <>
+                <Save size={20} />
+                Save Record Only
+              </>
+            )}
           </button>
           <button 
             type="button"
