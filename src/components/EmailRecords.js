@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { showNotification } from '../utils/notifications';
+import { showNotification, showPromiseNotification } from '../utils/notifications';
 import Modal from './Modal';
+import LoadingScreen, { SkeletonLoader, InlineLoading } from './LoadingScreen'; // Add this import
 import * as XLSX from 'xlsx';
 import { 
-  Database, 
-  Search, 
-  Calendar, 
-  RefreshCw, 
-  Download, 
-  FileText, 
-  Eye, 
-  User, 
-  Mail, 
-  Paperclip,
-  FileDown,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink
+  Database, Search, Calendar, RefreshCw, Download, FileText, 
+  Eye, User, Mail, Paperclip, FileDown, Filter, ChevronDown, ChevronUp, ExternalLink 
 } from 'lucide-react';
 
 const EmailRecords = () => {
@@ -36,22 +24,32 @@ const EmailRecords = () => {
   }, []);
 
   const loadEmailRecords = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('email_records')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setEmailRecords(data || []);
-      showNotification(`Loaded ${data?.length || 0} email records`, 'success');
-    } catch (error) {
-      console.error('Error loading records:', error);
-      showNotification('Failed to load email records', 'error');
-    } finally {
-      setLoading(false);
-    }
+    // Use promise notification for loading records
+    showPromiseNotification(
+      new Promise(async (resolve, reject) => {
+        try {
+          setLoading(true);
+          const { data, error } = await supabase
+            .from('email_records')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (error) throw error;
+          setEmailRecords(data || []);
+          resolve(data);
+        } catch (error) {
+          console.error('Error loading records:', error);
+          reject(error);
+        } finally {
+          setLoading(false);
+        }
+      }),
+      {
+        loading: 'Loading email records...',
+        success: (data) => `Successfully loaded ${data?.length || 0} email records`,
+        error: 'Failed to load email records'
+      }
+    );
   };
 
   const handleSort = (key) => {
@@ -60,6 +58,7 @@ const EmailRecords = () => {
       direction = 'asc';
     }
     setSortConfig({ key, direction });
+    showNotification(`Sorted by ${key.replace('_', ' ')} ${direction}`, 'info', 2000);
   };
 
   const sortedRecords = [...emailRecords].sort((a, b) => {
@@ -79,101 +78,119 @@ const EmailRecords = () => {
   });
 
   const downloadPdf = async (filename) => {
-    setDownloading(prev => ({ ...prev, [filename]: true }));
-    try {
-      const { data, error } = await supabase.storage
-        .from('pdfs')
-        .download(filename);
-      
-      if (error) throw error;
-      
-      const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      showNotification('PDF downloaded successfully', 'success');
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      showNotification('Failed to download PDF', 'error');
-    } finally {
-      setDownloading(prev => ({ ...prev, [filename]: false }));
-    }
+    showPromiseNotification(
+      new Promise(async (resolve, reject) => {
+        setDownloading(prev => ({ ...prev, [filename]: true }));
+        try {
+          const { data, error } = await supabase.storage
+            .from('pdfs')
+            .download(filename);
+          
+          if (error) throw error;
+          
+          const url = URL.createObjectURL(data);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          resolve(filename);
+        } catch (error) {
+          console.error('Error downloading PDF:', error);
+          reject(error);
+        } finally {
+          setDownloading(prev => ({ ...prev, [filename]: false }));
+        }
+      }),
+      {
+        loading: `Downloading ${filename}...`,
+        success: (filename) => `Successfully downloaded ${filename}`,
+        error: (error) => `Failed to download PDF: ${error.message}`
+      }
+    );
   };
 
   const downloadExcel = async () => {
-    try {
-      if (emailRecords.length === 0) {
-        showNotification('No records to download', 'warning');
-        return;
-      }
-
-      const recordsWithUrls = await Promise.all(
-        emailRecords.map(async (record) => {
-          let pdfUrl = null;
-          if (record.pdf_filename) {
-            const { data: { publicUrl } } = supabase.storage
-              .from('pdfs')
-              .getPublicUrl(record.pdf_filename);
-            pdfUrl = publicUrl;
-          }
-          return { ...record, pdfUrl };
-        })
-      );
-
-      const excelData = recordsWithUrls.map(record => ({
-        'From': record.from_user,
-        'To': record.to_user,
-        'Date': new Date(record.sent_date).toLocaleDateString(),
-        'Subject': record.subject,
-        'Content': record.content,
-        'Subject (Hindi)': record.subject_hindi || '',
-        'Content (Hindi)': record.content_hindi || '',
-        'Subject (Marathi)': record.subject_marathi || '',
-        'Content (Marathi)': record.content_marathi || '',
-        'PDF Attachment': record.pdf_filename ? 'Available' : 'No Attachment',
-        'PDF Link': record.pdfUrl || '',
-        'Created At': new Date(record.created_at).toLocaleString()
-      }));
-
-      const workbook = XLSX.utils.book_new();
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-      
-      // Set column widths
-      const columnWidths = [
-        { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 40 }, 
-        { wch: 50 }, { wch: 40 }, { wch: 50 }, { wch: 40 }, 
-        { wch: 50 }, { wch: 20 }, { wch: 50 }, { wch: 20 }
-      ];
-      worksheet['!cols'] = columnWidths;
-
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Email Records');
-      
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `email-records-${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      showNotification('Excel file downloaded successfully!', 'success');
-    } catch (error) {
-      console.error('Error generating Excel:', error);
-      showNotification('Failed to generate Excel file', 'error');
+    if (emailRecords.length === 0) {
+      showNotification('No records to download', 'warning');
+      return;
     }
+
+    showPromiseNotification(
+      new Promise(async (resolve, reject) => {
+        try {
+          const recordsWithUrls = await Promise.all(
+            emailRecords.map(async (record) => {
+              let pdfUrl = null;
+              if (record.pdf_filename) {
+                const { data: { publicUrl } } = supabase.storage
+                  .from('pdfs')
+                  .getPublicUrl(record.pdf_filename);
+                pdfUrl = publicUrl;
+              }
+              return { ...record, pdfUrl };
+            })
+          );
+
+          const excelData = recordsWithUrls.map(record => ({
+            'From': record.from_user,
+            'To': record.to_user,
+            'Date': new Date(record.sent_date).toLocaleDateString(),
+            'Subject': record.subject,
+            'Content': record.content,
+            'Subject (Hindi)': record.subject_hindi || '',
+            'Content (Hindi)': record.content_hindi || '',
+            'Subject (Marathi)': record.subject_marathi || '',
+            'Content (Marathi)': record.content_marathi || '',
+            'PDF Attachment': record.pdf_filename ? 'Available' : 'No Attachment',
+            'PDF Link': record.pdfUrl || '',
+            'Created At': new Date(record.created_at).toLocaleString()
+          }));
+
+          const workbook = XLSX.utils.book_new();
+          const worksheet = XLSX.utils.json_to_sheet(excelData);
+          
+          const columnWidths = [
+            { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 40 }, 
+            { wch: 50 }, { wch: 40 }, { wch: 50 }, { wch: 40 }, 
+            { wch: 50 }, { wch: 20 }, { wch: 50 }, { wch: 20 }
+          ];
+          worksheet['!cols'] = columnWidths;
+
+          XLSX.utils.book_append_sheet(workbook, worksheet, 'Email Records');
+          
+          const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+          const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `email-records-${new Date().toISOString().split('T')[0]}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          resolve();
+        } catch (error) {
+          console.error('Error generating Excel:', error);
+          reject(error);
+        }
+      }),
+      {
+        loading: 'Generating Excel file...',
+        success: 'Excel file downloaded successfully!',
+        error: 'Failed to generate Excel file'
+      }
+    );
   };
 
   const handleViewClick = (record) => {
     setSelectedEmail(record);
+    showNotification(`Viewing details for: ${record.subject || 'No subject'}`, 'info', 3000);
   };
 
   const handleCloseModal = () => {
@@ -211,10 +228,11 @@ const EmailRecords = () => {
   if (loading) {
     return (
       <div className="page active">
-        <div className="loading-screen">
-          <div className="loading-spinner"></div>
-          <p>Loading email records...</p>
-        </div>
+        <LoadingScreen 
+          type="database"
+          message="Loading Email Records"
+          subtitle="Fetching your email history from the database"
+        />
       </div>
     );
   }
@@ -313,6 +331,7 @@ const EmailRecords = () => {
                   onClick={() => {
                     setSearchTerm('');
                     setDateFilter('');
+                    showNotification('Filters cleared', 'info');
                   }}
                 >
                   Clear All Filters
@@ -477,8 +496,14 @@ const EmailRecords = () => {
                                         className="btn-download-small"
                                         title="Download PDF"
                                       >
-                                        <Download size={14} />
-                                        {downloading[filename] ? "..." : "Download"}
+                                        {downloading[filename] ? (
+                                          <InlineLoading size="small" text="Downloading..." />
+                                        ) : (
+                                          <>
+                                            <Download size={14} />
+                                            Download
+                                          </>
+                                        )}
                                       </button>
                                     </div>
                                   ))}
