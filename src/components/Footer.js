@@ -1,22 +1,15 @@
 import React from 'react';
-import { Mail, Database, HelpCircle, Github, ExternalLink } from 'lucide-react';
+import { Mail, Database, Github, ExternalLink } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   const handleNavClick = (page) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="footer" id="footer">
+    <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
           <h3>
@@ -29,7 +22,7 @@ const Footer = () => {
         <div className="footer-section">
           <h4>
             <Database size={20} />
-            Quick Links
+            Quick Navigation
           </h4>
           <ul>
             <li>
@@ -50,9 +43,9 @@ const Footer = () => {
         <div className="footer-section">
           <h4>
             <Github size={20} />
-            Developers
+            Development Team
           </h4>
-          <p>Built with modern web technologies</p>
+          <p>Built with modern web technologies for seamless email management.</p>
           <div className="github-links">
             <a 
               href="https://github.com/Hrishikesh-Gavai" 
@@ -86,4 +79,3 @@ const Footer = () => {
 };
 
 export default Footer;
-
