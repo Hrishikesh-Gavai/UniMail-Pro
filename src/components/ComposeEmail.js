@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { showNotification, showPromiseNotification } from "../utils/notifications";
 import { InlineLoading } from "./LoadingScreen";
-import { Mail, Send, Save, Upload, FileText, ChevronDown, Folder, ArrowLeft, X, Languages, User, Calendar, Info, Trash2, Paperclip } from 'lucide-react';
+import { Mail, Send, Save, Upload, FileText, ChevronDown, Folder, X, Languages, User, Calendar, Info, Trash2, Paperclip } from 'lucide-react';
 
 const ComposeEmail = ({ onRecordSaved }) => {
   const [formData, setFormData] = useState({
@@ -33,7 +33,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
   const toInputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Email options
   const emailOptions = {
     "Administration": {
       "Principal": ["Principal-1@kkwagh.edu.in"],
@@ -61,7 +60,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -69,11 +67,8 @@ const ComposeEmail = ({ onRecordSaved }) => {
         setActiveFolder(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleInputChange = (e) => {
@@ -89,7 +84,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
     if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
       e.preventDefault();
       const newEmail = emailInput.trim().replace(/[,;\s]+$/, "");
-
       if (newEmail && isValidEmail(newEmail)) {
         addEmail(newEmail);
       } else if (newEmail && !isValidEmail(newEmail)) {
@@ -99,10 +93,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
   };
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const addEmail = (email) => {
     if (!formData.to.includes(email)) {
@@ -113,16 +104,11 @@ const ComposeEmail = ({ onRecordSaved }) => {
     }
     setDropdownOpen(false);
     setActiveFolder(null);
-    if (toInputRef.current) {
-      toInputRef.current.focus();
-    }
+    if (toInputRef.current) toInputRef.current.focus();
   };
 
   const removeEmail = (email) => {
-    setFormData((prev) => ({
-      ...prev,
-      to: prev.to.filter((e) => e !== email),
-    }));
+    setFormData((prev) => ({ ...prev, to: prev.to.filter((e) => e !== email) }));
     showNotification(`Removed ${email}`, "info");
   };
 
@@ -138,7 +124,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
 
   const handleFileUpload = async (files) => {
     if (!files.length) return;
-
     const validFiles = Array.from(files).filter(file => {
       if (file.type !== 'application/pdf') {
         showNotification(`${file.name}: Only PDF files are allowed`, "error");
@@ -157,15 +142,12 @@ const ComposeEmail = ({ onRecordSaved }) => {
           try {
             const fileName = `${Date.now()}-${file.name}`;
             const { error } = await supabase.storage.from("pdfs").upload(fileName, file);
-
             if (error) throw error;
-
             setFormData((prev) => ({
               ...prev,
               pdfFiles: [...prev.pdfFiles, file],
               pdfFileNames: [...prev.pdfFileNames, fileName],
             }));
-
             return fileName;
           } catch (err) {
             console.error("PDF upload error:", err);
@@ -231,30 +213,13 @@ const ComposeEmail = ({ onRecordSaved }) => {
             `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`
           );
 
-          if (!response.ok) {
-            throw new Error('Translation API request failed');
-          }
-
+          if (!response.ok) throw new Error('Translation API request failed');
           const data = await response.json();
-
-          if (data.responseStatus !== 200) {
-            throw new Error('Translation failed: ' + data.responseDetails);
-          }
+          if (data.responseStatus !== 200) throw new Error('Translation failed: ' + data.responseDetails);
 
           const translatedText = data.responseData.translatedText;
-
-          if (type === 'subject') {
-            setFormData(prev => ({
-              ...prev,
-              [`subject${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText
-            }));
-          } else {
-            setFormData(prev => ({
-              ...prev,
-              [`content${language.charAt(0).toUpperCase() + language.slice(1)}`]: translatedText
-            }));
-          }
-
+          const fieldName = `${type}${language.charAt(0).toUpperCase() + language.slice(1)}`;
+          setFormData(prev => ({ ...prev, [fieldName]: translatedText }));
           resolve(translatedText);
         } catch (error) {
           console.error('Translation error:', error);
@@ -279,39 +244,33 @@ const ComposeEmail = ({ onRecordSaved }) => {
       showNotification("Please add at least one recipient", "error");
       return;
     }
-
     if (!formData.subject.trim()) {
       showNotification("Please add a subject", "error");
       return;
     }
 
     setLoading(true);
-
     try {
       const { data, error } = await supabase
         .from("email_records")
-        .insert([
-          {
-            from_user: formData.from || "Not specified",
-            to_user: formData.to.join(","),
-            subject: formData.subject,
-            content: formData.content,
-            subject_hindi: formData.subjectHindi,
-            content_hindi: formData.contentHindi,
-            subject_marathi: formData.subjectMarathi,
-            content_marathi: formData.contentMarathi,
-            pdf_filename: formData.pdfFileNames.length ? formData.pdfFileNames.join(",") : null,
-            sent_date: formData.sentDate,
-          },
-        ])
+        .insert([{
+          from_user: formData.from || "Not specified",
+          to_user: formData.to.join(","),
+          subject: formData.subject,
+          content: formData.content,
+          subject_hindi: formData.subjectHindi,
+          content_hindi: formData.contentHindi,
+          subject_marathi: formData.subjectMarathi,
+          content_marathi: formData.contentMarathi,
+          pdf_filename: formData.pdfFileNames.length ? formData.pdfFileNames.join(",") : null,
+          sent_date: formData.sentDate,
+        }])
         .select();
 
       if (error) throw error;
-
       const insertedRow = data[0];
       showNotification("Email record saved successfully!", "success");
 
-      // Reset form but keep sender email
       setFormData({
         from: formData.from,
         to: [],
@@ -326,7 +285,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
         sentDate: new Date().toISOString().split("T")[0],
       });
       setEmailInput("");
-
       if (onRecordSaved) onRecordSaved(insertedRow);
     } catch (err) {
       console.error("Error saving email record:", err);
@@ -341,7 +299,6 @@ const ComposeEmail = ({ onRecordSaved }) => {
       showNotification("Please add at least one recipient", "error");
       return;
     }
-
     if (!formData.subject.trim()) {
       showNotification("Please add a subject", "error");
       return;
@@ -354,22 +311,16 @@ const ComposeEmail = ({ onRecordSaved }) => {
           const subject = formData.subject || '';
           let body = formData.content || '';
 
-          // Add translations to email body
           if (formData.contentHindi || formData.contentMarathi) {
             body += '\n\n--- Translations ---\n';
-            if (formData.contentHindi) {
-              body += `\nHindi:\n${formData.contentHindi}\n`;
-            }
-            if (formData.contentMarathi) {
-              body += `\nMarathi:\n${formData.contentMarathi}\n`;
-            }
+            if (formData.contentHindi) body += `\nHindi:\n${formData.contentHindi}\n`;
+            if (formData.contentMarathi) body += `\nMarathi:\n${formData.contentMarathi}\n`;
           }
 
           const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toEmails)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
           const gmailWindow = window.open(gmailUrl, '_blank');
 
           if (gmailWindow) {
-            // Auto-save after a short delay
             setTimeout(async () => {
               await saveEmailRecord();
               resolve();
@@ -615,11 +566,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
                             >
                               {email}
                               {formData.to.includes(email) && (
-                                <span style={{ 
-                                  marginLeft: '8px', 
-                                  color: 'var(--success)', 
-                                  fontWeight: '600' 
-                                }}>
+                                <span style={{ marginLeft: '8px', color: 'var(--success)', fontWeight: '600' }}>
                                   ✓ Added
                                 </span>
                               )}
@@ -668,7 +615,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
         />
       </div>
 
-      {/* Translation Section */}
+      {/* Translation Section - MOBILE RESPONSIVE */}
       <div style={{
         background: 'var(--gray-50)',
         padding: 'var(--space-xl)',
@@ -686,33 +633,36 @@ const ComposeEmail = ({ onRecordSaved }) => {
           <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>Multi-Language Translation</h3>
         </div>
 
-        {/* Hindi Translation */}
+        {/* Hindi Translation - MOBILE OPTIMIZED */}
         <div style={{ marginBottom: 'var(--space-lg)' }}>
           <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
             marginBottom: 'var(--space-sm)',
           }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ marginBottom: 'var(--space-sm)' }}>
               Hindi Translation
             </label>
-            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: 'var(--space-sm)',
+              flexWrap: 'wrap',
+            }}>
               <button
                 className="btn btn-sm btn-secondary"
                 onClick={() => translateText(formData.subject, 'subject', 'hindi')}
                 disabled={translating.hindi.subject || !formData.subject.trim()}
+                style={{ flex: '1 1 auto', minWidth: '140px' }}
               >
                 {translating.hindi.subject ? <InlineLoading /> : <Languages size={14} />}
-                Translate Subject
+                Subject
               </button>
               <button
                 className="btn btn-sm btn-secondary"
                 onClick={() => translateText(formData.content, 'content', 'hindi')}
                 disabled={translating.hindi.content || !formData.content.trim()}
+                style={{ flex: '1 1 auto', minWidth: '140px' }}
               >
                 {translating.hindi.content ? <InlineLoading /> : <Languages size={14} />}
-                Translate Content
+                Content
               </button>
             </div>
           </div>
@@ -735,33 +685,36 @@ const ComposeEmail = ({ onRecordSaved }) => {
           />
         </div>
 
-        {/* Marathi Translation */}
+        {/* Marathi Translation - MOBILE OPTIMIZED */}
         <div>
           <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
             marginBottom: 'var(--space-sm)',
           }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ marginBottom: 'var(--space-sm)' }}>
               Marathi Translation
             </label>
-            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: 'var(--space-sm)',
+              flexWrap: 'wrap',
+            }}>
               <button
                 className="btn btn-sm btn-secondary"
                 onClick={() => translateText(formData.subject, 'subject', 'marathi')}
                 disabled={translating.marathi.subject || !formData.subject.trim()}
+                style={{ flex: '1 1 auto', minWidth: '140px' }}
               >
                 {translating.marathi.subject ? <InlineLoading /> : <Languages size={14} />}
-                Translate Subject
+                Subject
               </button>
               <button
                 className="btn btn-sm btn-secondary"
                 onClick={() => translateText(formData.content, 'content', 'marathi')}
                 disabled={translating.marathi.content || !formData.content.trim()}
+                style={{ flex: '1 1 auto', minWidth: '140px' }}
               >
                 {translating.marathi.content ? <InlineLoading /> : <Languages size={14} />}
-                Translate Content
+                Content
               </button>
             </div>
           </div>
@@ -853,10 +806,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => removeFile(index)}
-                  className="btn btn-danger btn-sm"
-                >
+                <button onClick={() => removeFile(index)} className="btn btn-danger btn-sm">
                   <X size={16} />
                 </button>
               </div>
@@ -900,11 +850,7 @@ const ComposeEmail = ({ onRecordSaved }) => {
           Save Record Only
         </button>
 
-        <button
-          onClick={clearForm}
-          className="btn btn-secondary"
-          disabled={loading}
-        >
+        <button onClick={clearForm} className="btn btn-secondary" disabled={loading}>
           <Trash2 size={18} />
           Clear Form
         </button>
