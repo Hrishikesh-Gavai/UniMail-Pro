@@ -1,4 +1,4 @@
-# 📧 UniMail Pro bruh
+# 📧 UniMail Pro
 
 > A professional email management system with database integration
 
